@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2012-2014 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   All Rights Reserved Worldwide
 //
 //   Licensed under the Apache License, Version 2.0 (the
@@ -21,6 +21,7 @@
 #define UVM_MISC_H_
 
 #include <cstdarg>
+#include <systemc>
 
 #include "uvmsc/misc/uvm_scope_stack.h"
 #include "uvmsc/misc/uvm_status_container.h"
@@ -55,6 +56,8 @@ std::string uvm_leaf_scope( const std::string& full_name, const char* scope_sepa
 
 std::string uvm_object_value_str( const uvm_object* v );
 
+const std::string uvm_string_queue_join( const std::vector<std::string>& q );
+
 /////////////////////////////////////////////////////////////////
 // some other utilities functions not defined in UVM-SV
 /////////////////////////////////////////////////////////////////
@@ -70,6 +73,8 @@ sc_dt::sc_uint<32> uvm_realtobits( float val );
 float uvm_bitstoreal( const sc_dt::sc_uint<32>& val );
 
 std::string uvm_sformatf(const char* format, ...);
+
+void enable_hdl_access(sc_core::sc_object* dut);
 
 } // namespace uvm
 

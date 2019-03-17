@@ -26,8 +26,12 @@
 #include "uvmsc/conf/uvm_resource_pool.h"
 #include "uvmsc/conf/uvm_resource_types.h"
 #include "uvmsc/conf/uvm_resource_options.h"
+#include "uvmsc/misc/uvm_misc.h"
 #include "uvmsc/base/uvm_globals.h"
 #include "uvmsc/print/uvm_line_printer.h"
+#include "uvmsc/macros/uvm_message_defines.h"
+#include "uvmsc/macros/uvm_string_defines.h"
+
 
 namespace uvm {
 
@@ -255,8 +259,9 @@ void uvm_resource_pool::dump_get_records() const
 {
   get_t* record;
   bool success;
+  std::vector<std::string> qs;
 
-  std::cout << "--- resource get records ---" << std::endl;
+  qs.push_back("--- resource get records ---\n");
 
   for ( get_record_list_cItT
         it = get_record.begin();
@@ -266,11 +271,15 @@ void uvm_resource_pool::dump_get_records() const
     record = (*it);
     success = (record->rsrc != NULL);
 
-    std::cout << "get: name=" << record->name
-              << " scope=" << record->scope
-              << " " << ((success)?"success":"fail")
-              << " @" << record->t << std::endl;
+    std::ostringstream str;
+    str << "get: name=" << record->name
+        << " scope=" << record->scope
+        << " " << ((success)?"success":"fail")
+        << " @" << record->t << "\n";
+    qs.push_back(str.str());
   }
+
+  UVM_INFO("UVM/RESOURCE/GETRECORD", UVM_STRING_QUEUE_STREAMING_PACK(qs), UVM_NONE);
 }
 
 //----------------------------------------------------------------------
@@ -788,14 +797,14 @@ void uvm_resource_pool::print_resources( uvm_resource_types::rsrc_q_t* rq,
                                          bool audit ) const
 {
   uvm_resource_base* r;
-  uvm_line_printer printer;
+  uvm_line_printer* printer = new uvm_line_printer();
   int size = 0;
 
-  printer.knobs.separator = "";
-  printer.knobs.full_name = 0;
-  printer.knobs.identifier = 0;
-  printer.knobs.type_name = 0;
-  printer.knobs.reference = 0;
+  printer->knobs.separator.clear(); // no separators used
+  printer->knobs.full_name = 0;
+  printer->knobs.identifier = 0;
+  printer->knobs.type_name = 0;
+  printer->knobs.reference = 0;
 
   if(rq != NULL)
     size = rq->size();
@@ -809,10 +818,12 @@ void uvm_resource_pool::print_resources( uvm_resource_types::rsrc_q_t* rq,
   for(int i = 0; i < size; i++)
   {
     r = rq->get(i);
-    r->print(&printer);
+    r->print(printer);
     if(audit == true)
       r->print_accessors();
   }
+
+  delete printer;
 }
 
 //--------------------------------------------------------------------
@@ -829,7 +840,7 @@ void uvm_resource_pool::dump( bool audit ) const
   uvm_resource_types::rsrc_q_t* rq;
   std::string name;
 
-  std::cout << std::endl << "=== resource pool ===" << std::endl;
+  UVM_INFO("UVM/RESOURCE/DUMP", "\n=== resource pool ===", UVM_NONE);
 
   for( rtab_mapcItT it = rtab.begin(); it != rtab.end(); it++ )
   {
@@ -837,7 +848,7 @@ void uvm_resource_pool::dump( bool audit ) const
     print_resources(rq, audit);
   }
 
-  std::cout << "=== end of resource pool ===" << std::endl;
+  UVM_INFO("UVM/RESOURCE/DUMP", "=== end of resource pool ===", UVM_NONE);
 }
 
 

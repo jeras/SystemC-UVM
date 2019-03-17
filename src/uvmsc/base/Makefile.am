@@ -3,11 +3,13 @@ include $(top_srcdir)/config/Make-rules
 H_FILES = \
 	uvm_base.h \
 	uvm_component.h \
+	uvm_component_name.h \
+	uvm_coreservice_t.h \
+	uvm_default_coreservice_t.h \
 	uvm_event_callback.h \
 	uvm_event.h \
 	uvm_export_base.h \
 	uvm_globals.h \
-	uvm_component_name.h \
 	uvm_object.h \
 	uvm_object_globals.h \
 	uvm_port_base.h \
@@ -22,6 +24,10 @@ noinst_HEADERS = $(H_FILES)
 
 CXX_FILES = \
 	uvm_component.cpp \
+	uvm_component_name.cpp \
+	uvm_coreservice_t.cpp \
+	uvm_default_coreservice_t.cpp \
+	uvm_event_callback.cpp \
 	uvm_event.cpp \
 	uvm_globals.cpp \
 	uvm_object.cpp \

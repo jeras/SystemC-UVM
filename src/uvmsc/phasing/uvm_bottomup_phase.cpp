@@ -22,6 +22,9 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
+
+#include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_globals.h"
 #include "uvmsc/macros/uvm_message_defines.h"
 #include "uvmsc/phasing/uvm_bottomup_phase.h"

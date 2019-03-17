@@ -24,6 +24,7 @@
 #include "uvmsc/report/uvm_report_catcher.h"
 #include "uvmsc/report/uvm_report_handler.h"
 #include "uvmsc/report/uvm_report_server.h"
-#include "uvmsc/report/uvm_root_report_handler.h"
+#include "uvmsc/report/uvm_report_message.h"
+#include "uvmsc/report/uvm_default_report_server.h"
 
 #endif // UVM_REPORT_H_

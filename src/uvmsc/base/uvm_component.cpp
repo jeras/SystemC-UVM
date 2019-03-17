@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <algorithm>
 
 #ifndef SC_INCLUDE_DYNAMIC_PROCESSES
@@ -32,9 +33,10 @@
 #include <systemc>
 #include "sysc/kernel/sc_dynamic_processes.h"
 
-#include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_root.h"
+#include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_component_name.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
 #include "uvmsc/factory/uvm_factory.h"
 #include "uvmsc/base/uvm_object_globals.h"
 #include "uvmsc/phasing/uvm_common_phases.h"
@@ -43,6 +45,7 @@
 #include "uvmsc/seq/uvm_sequencer_base.h"
 #include "uvmsc/print/uvm_printer.h"
 #include "uvmsc/macros/uvm_message_defines.h"
+#include "uvmsc/report/uvm_report_object.h"
 
 using namespace sc_core;
 
@@ -65,12 +68,14 @@ bool uvm_component::_print_config_matches = false;
 //----------------------------------------------------------------------------
 
 uvm_component::uvm_component( uvm_component_name nm )
-: sc_module( nm.name() )
+: sc_module( nm.name() ), uvm_report_object((std::string)nm.name())
 {
   // prevent recursive registration of uvm_root module
   bool top = ( strstr(nm, "uvm_top") != NULL );
 
   set_name(std::string(nm));
+
+  start_report_handler(this->name());
 
   if (!top) {
 
@@ -84,7 +89,10 @@ uvm_component::uvm_component( uvm_component_name nm )
       std::ostringstream str;
       str << "The parent of UVM component '" << nm << "' is not a UVM component. uvm_top is used instead.";
       uvm_report_info("NOPARENT", str.str(), UVM_HIGH);
-      m_comp_parent = uvm_root::get();
+
+      uvm_coreservice_t* cs = uvm_coreservice_t::get();
+      uvm_root* root = cs->get_root();
+      m_comp_parent = root;
     }
     else
       m_comp_parent = uvm_parent;
@@ -273,7 +281,10 @@ uvm_component* uvm_component::lookup( const std::string& name ) const
   std::string leaf, remainder;
   const uvm_component* comp;
 
-  uvm_root* top = uvm_root::get();
+  const uvm_root* top;
+  uvm_coreservice_t* cs;
+  cs = uvm_coreservice_t::get();
+  top = cs->get_root();
 
   comp = this;
 
@@ -906,9 +917,12 @@ void uvm_component::all_dropped( uvm_objection* objection,
 uvm_component* uvm_component::create_component( const std::string& requested_type_name,
                                                 const std::string& name )
 {
-  return get_factory()->create_component_by_name( requested_type_name,
-                                                  get_full_name(),
-                                                  name, this );
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  return factory->create_component_by_name( requested_type_name,
+                                            get_full_name(),
+                                            name, this );
 }
 
 
@@ -924,9 +938,12 @@ uvm_component* uvm_component::create_component( const std::string& requested_typ
 uvm_object* uvm_component::create_object( const std::string& requested_type_name,
                                           const std::string& name )
 {
-  return get_factory()->create_object_by_name( requested_type_name,
-                                               get_full_name(),
-                                               name );
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  return factory->create_object_by_name( requested_type_name,
+                                         get_full_name(),
+                                         name );
 }
 
 //----------------------------------------------------------------------------
@@ -941,7 +958,10 @@ void uvm_component::set_type_override_by_type( uvm_object_wrapper* original_type
                                                uvm_object_wrapper* override_type,
                                                bool replace )
 {
-  get_factory()->set_type_override_by_type( original_type, override_type, replace );
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  factory->set_type_override_by_type( original_type, override_type, replace );
 }
 
 //----------------------------------------------------------------------------
@@ -958,7 +978,11 @@ void uvm_component::set_inst_override_by_type( const std::string& relative_inst_
 {
   std::string full_inst_path = prepend_name(relative_inst_path);
   // TODO note: for some reason, the parameter order is slightly different between component and factory
-  get_factory()->set_inst_override_by_type( original_type, override_type, full_inst_path );
+
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  factory->set_inst_override_by_type( original_type, override_type, full_inst_path );
 }
 
 //----------------------------------------------------------------------------
@@ -974,7 +998,10 @@ void uvm_component::set_type_override( const std::string& original_type_name,
                                        const std::string& override_type_name,
                                        bool replace )
 {
-  get_factory()->set_type_override_by_name( original_type_name, override_type_name, replace );
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  factory->set_type_override_by_name( original_type_name, override_type_name, replace );
 }
 
 //----------------------------------------------------------------------------
@@ -990,7 +1017,11 @@ void uvm_component::set_inst_override( const std::string& relative_inst_path,
                                        const std::string& override_type_name )
 {
   std::string path = prepend_name(relative_inst_path);
-  get_factory()->set_inst_override_by_name( original_type_name, override_type_name, path  );
+
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  factory->set_inst_override_by_name( original_type_name, override_type_name, path  );
 }
 
 //----------------------------------------------------------------------------
@@ -1005,7 +1036,10 @@ void uvm_component::set_inst_override( const std::string& relative_inst_path,
 void uvm_component::print_override_info( const std::string& requested_type_name,
                                          const std::string& name )
 {
-  get_factory()->debug_create_by_name(requested_type_name, get_full_name(), name);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  factory->debug_create_by_name(requested_type_name, get_full_name(), name);
 }
 
 //----------------------------------------------------------------------------

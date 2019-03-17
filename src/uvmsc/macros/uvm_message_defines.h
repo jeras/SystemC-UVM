@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2012-2014 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   Copyright 2007-2011 Mentor Graphics Corporation
 //   Copyright 2007-2010 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -63,7 +63,7 @@
 
 #define UVM_INFO(ID,MSG,VERBOSITY) \
   if (uvm_report_enabled(VERBOSITY, ::uvm::UVM_INFO, ID)) \
-    uvm_report_info(ID, MSG, VERBOSITY, __FILE__, __LINE__)
+    uvm_report_info(ID, MSG, VERBOSITY, UVM_FILE_M, UVM_LINE_M, "", 1)
 
 //----------------------------------------------------------------------
 // MACRO: UVM_WARNING
@@ -77,7 +77,8 @@
 
 #define UVM_WARNING(ID,MSG) \
   if (uvm_report_enabled((int)::uvm::UVM_NONE, ::uvm::UVM_WARNING, std::string(ID))) \
-    uvm_report_warning(ID, MSG, ::uvm::UVM_NONE, UVM_FILE_M, UVM_LINE_M)
+    uvm_report_warning(ID, MSG, ::uvm::UVM_NONE, UVM_FILE_M, UVM_LINE_M, "", 1)
+
 
 //----------------------------------------------------------------------
 // MACRO: UVM_ERROR
@@ -91,7 +92,7 @@
 
 #define UVM_ERROR(ID,MSG) \
   if (uvm_report_enabled(::uvm::UVM_NONE, ::uvm::UVM_ERROR, ID)) \
-    uvm_report_error(ID, MSG, ::uvm::UVM_NONE, UVM_FILE_M, UVM_LINE_M)
+    uvm_report_error(ID, MSG, ::uvm::UVM_NONE, UVM_FILE_M, UVM_LINE_M, "", 1)
 
 //----------------------------------------------------------------------
 // MACRO: UVM_FATAL
@@ -104,8 +105,66 @@
 //----------------------------------------------------------------------
 
 #define UVM_FATAL(ID,MSG) \
-  if (uvm_report_enabled(::uvm::UVM_NONE, ::uvm::UVM_FATAL, ID)) \
-    uvm_report_fatal(ID, MSG, ::uvm::UVM_NONE, UVM_FILE_M, UVM_LINE_M)
+  if (uvm_report_enabled(::uvm::UVM_NONE, ::uvm::UVM_FATAL, ID))\
+    uvm_report_fatal(ID, MSG, ::uvm::UVM_NONE, UVM_FILE_M, UVM_LINE_M, "", 1)
+
+//----------------------------------------------------------------------
+// MACRO: UVM_INFO_CONTEXT
+//
+//! Operates identically to UVM_INFO but requires that the
+//! context, or uvm_report_object, in which the message is printed be
+//! explicitly supplied as a macro argument.
+//----------------------------------------------------------------------
+
+#define UVM_INFO_CONTEXT(ID, MSG, VERBOSITY, RO) \
+   { \
+     if (RO->uvm_report_enabled(VERBOSITY,UVM_INFO,ID)) \
+      RO->uvm_report_info(ID, MSG, VERBOSITY, UVM_FILE_M, UVM_LINE_M, "", 1); \
+   }
+
+//----------------------------------------------------------------------
+// MACRO: UVM_WARNING_CONTEXT
+//
+//! Operates identically to UVM_WARNING but requires that the
+//! context, or uvm_report_object, in which the message is printed be
+//! explicitly supplied as a macro argument.
+//----------------------------------------------------------------------
+
+#define UVM_WARNING_CONTEXT(ID, MSG, RO) \
+   { \
+     if (RO->uvm_report_enabled(UVM_NONE,UVM_WARNING,ID)) \
+       RO->uvm_report_warning (ID, MSG, UVM_NONE, UVM_FILE_M, UVM_LINE_M, "", 1); \
+   }
+
+
+//----------------------------------------------------------------------
+// MACRO: UVM_ERROR_CONTEXT
+//
+//! Operates identically to UVM_ERROR but requires that the
+//! context, or <uvm_report_object> in which the message is printed be
+//! explicitly supplied as a macro argument.
+//----------------------------------------------------------------------
+
+#define UVM_ERROR_CONTEXT(ID, MSG, RO) \
+   { \
+     if (RO->uvm_report_enabled(UVM_NONE,UVM_ERROR,ID)) \
+       RO->uvm_report_error(ID, MSG, UVM_NONE, UVM_FILE_M, UVM_LINE_M, "", 1); \
+   }
+
+
+//----------------------------------------------------------------------
+// MACRO: UVM_FATAL_CONTEXT
+//
+//! Operates identically to UVM_FATAL but requires that the
+//! context, or uvm_report_object, in which the message is printed be
+//! explicitly supplied as a macro argument.
+//----------------------------------------------------------------------
+
+#define UVM_FATAL_CONTEXT(ID, MSG, RO) \
+   { \
+     if (RO->uvm_report_enabled(UVM_NONE,UVM_FATAL,ID)) \
+       RO->uvm_report_fatal(ID, MSG, UVM_NONE, UVM_FILE_M, UVM_LINE_M, "", 1); \
+   }
 
 
 #endif /* UVM_MESSAGE_DEFINES_H_ */

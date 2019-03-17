@@ -213,7 +213,7 @@ class uvm_phase : public uvm_object
 
   void wait_for_self_and_siblings_to_drop();
 
-  void clear( uvm_phase_state state = UVM_PHASE_DORMANT );
+  void clear_phase( uvm_phase_state state = UVM_PHASE_DORMANT );
 
   void clear_successors( uvm_phase_state state = UVM_PHASE_DORMANT,
                          uvm_phase* end_state = NULL );

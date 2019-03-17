@@ -20,7 +20,6 @@
 #ifndef UVM_CONF_H_
 #define UVM_CONF_H_
 
-#include "uvmsc/conf/uvm_pool.h"
 #include "uvmsc/conf/uvm_queue.h"
 #include "uvmsc/conf/uvm_resource.h"
 #include "uvmsc/conf/uvm_resource_types.h"

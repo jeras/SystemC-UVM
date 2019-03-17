@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2013-2015 NXP B.V.
+//   Copyright 2013-2016 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2011 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -27,7 +27,12 @@
 #include <vector>
 #include <memory>
 
-#include "uvmsc/base/uvm_event_callback.h"
+#include "uvmsc/base/uvm_object.h"
+
+// forward declaration of uvm_packer used in uvm_object
+class uvm_object;
+class uvm_event_callback;
+class uvm_printer;
 
 namespace uvm {
 

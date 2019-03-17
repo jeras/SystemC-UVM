@@ -27,9 +27,13 @@
 #include <sstream>
 
 #include "uvmsc/policy/uvm_comparer.h"
+#include "uvmsc/base/uvm_root.h"
 #include "uvmsc/base/uvm_object_globals.h"
 #include "uvmsc/base/uvm_object.h"
 #include "uvmsc/base/uvm_globals.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
+#include "uvmsc/macros/uvm_message_defines.h"
 
 //////////////
 
@@ -37,12 +41,6 @@ using namespace sc_core;
 using namespace sc_dt;
 
 namespace uvm {
-
-//----------------------------------------------------------------------------
-// initialize static data members
-//----------------------------------------------------------------------------
-
-uvm_comparer* uvm_comparer::uvm_default_comparer = NULL;
 
 //----------------------------------------------------------------------------
 // Class: uvm_comparer implementation
@@ -367,6 +365,11 @@ bool uvm_comparer::compare_string( const std::string& name,
 
 void uvm_comparer::print_msg( const std::string& msg ) const
 {
+  uvm_root* root;
+  uvm_coreservice_t* cs;
+  cs = uvm_coreservice_t::get();
+  root = cs->get_root();
+
   result++;
 
   if(result <= show_max)
@@ -377,7 +380,7 @@ void uvm_comparer::print_msg( const std::string& msg ) const
          << ": "
          << msg;
 
-     uvm_report_info("MISCMP", str.str(), UVM_LOW);
+     root->uvm_report(sev, "MISCMP", str.str(), UVM_LOW, UVM_FILE_M, UVM_LINE_M);
   }
 
   std::ostringstream str;
@@ -598,66 +601,37 @@ uvm_comparer::~uvm_comparer()
 void uvm_comparer::print_rollup( const uvm_object& rhs,
                                  const uvm_object& lhs ) const
 {
-  std::ostringstream str;
+  std::ostringstream msg;
+
+  uvm_root* root;
+  uvm_coreservice_t* cs;
+  cs = uvm_coreservice_t::get();
+  root = cs->get_root();
 
   if(uvm_object::__m_uvm_status_container->scope->depth() == 0)
   {
     if(result && (show_max || (sev != UVM_INFO)))
     {
       if(show_max < result)
-        str << result
+        msg << result
             << " miscompare(s) ("
             << show_max
             << " shown) for object ";
       else
-        str << result
+        msg << result
             << " miscompare(s) for object ";
 
-      switch (sev)
-      {
-        case UVM_WARNING:
-        {
-          std::ostringstream msg;
-          msg << str.str()
-              << lhs.get_name()
-              << "@"
-              << lhs.get_inst_id()
-              << "vs. "
-              << rhs.get_name()
-              << "@"
-              << rhs.get_inst_id();
-          uvm_report_warning("MISCMP", msg.str(), UVM_NONE);
-          break;
-        }
-        case UVM_ERROR:
-        {
-          std::ostringstream msg;
-          msg << str.str()
-              << lhs.get_name()
-              << "@"
-              << lhs.get_inst_id()
-              << "vs. "
-              << rhs.get_name()
-              << "@"
-              << rhs.get_inst_id();
-          uvm_report_error("MISCMP", msg.str(), UVM_NONE);
-          break;
-        }
-        default:
-        {
-          std::ostringstream msg;
-          msg << str.str()
-              << lhs.get_name()
-              << "@"
-              << lhs.get_inst_id()
-              << "vs. "
-              << rhs.get_name()
-              << "@"
-              << rhs.get_inst_id();
-          uvm_report_info("MISCMP", msg.str(), UVM_LOW);
-          break;
-        }
-      } // switch
+      std::ostringstream str;
+      str << msg.str()
+          << lhs.get_name()
+          << "@"
+          << lhs.get_inst_id()
+          << " vs. "
+          << rhs.get_name()
+          << "@"
+          << rhs.get_inst_id();
+
+      root->uvm_report(sev, "MISCMP", str.str(), verbosity, UVM_FILE_M, UVM_LINE_M);
     }
   }
 }
@@ -672,6 +646,11 @@ void uvm_comparer::print_rollup( const uvm_object& rhs,
 void uvm_comparer::print_msg_object( const uvm_object& lhs,
                                      const uvm_object& rhs ) const
 {
+  uvm_root* root;
+  uvm_coreservice_t* cs;
+  cs = uvm_coreservice_t::get();
+  root = cs->get_root();
+
   result++;
   if(result <= show_max)
   {
@@ -683,7 +662,7 @@ void uvm_comparer::print_msg_object( const uvm_object& lhs,
         << ": rhs = @"
         << rhs.get_inst_id();
 
-    uvm_report_info("MISCMP", msg.str(), verbosity);
+    root->uvm_report(sev, "MISCMP", msg.str(), verbosity, UVM_FILE_M, UVM_LINE_M);
   }
 
   std::ostringstream str;

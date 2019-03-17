@@ -381,7 +381,7 @@ void uvm_resource<T>::write( const T& t, uvm_object*& accessor )
 
   // set the value and flag the modification
   val = t;
-  modified.notify();
+  modified.notify(sc_core::SC_ZERO_TIME);
 }
 
 

@@ -50,6 +50,8 @@ class uvm_component;
 class uvm_transaction : public uvm_object
 {
  public:
+  friend class uvm_reg_map;
+
   uvm_transaction();
 
   explicit uvm_transaction( uvm_object_name name );

@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------
 //   Copyright 2014 Fraunhofer-Gesellschaft zur Foerderung
 //					der angewandten Forschung e.V.
-//   Copyright 2012-2013 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2011 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -27,6 +27,7 @@
 #include "uvmsc/base/uvm_object_globals.h"
 #include "uvmsc/report/uvm_report_object.h"
 #include "uvmsc/report/uvm_report_handler.h"
+#include "uvmsc/report/uvm_report_message.h"
 
 namespace uvm {
 
@@ -34,22 +35,17 @@ namespace uvm {
 // initialization of static data members
 //----------------------------------------------------------------------------
 
-uvm_report_object* uvm_report_object::m_inst = 0;
-
 //----------------------------------------------------------------------------
-// constructors
+// constructor
 //
 //! Creates a new report object with the given name.
 //----------------------------------------------------------------------------
 
-uvm_report_object::uvm_report_object() : uvm_object()
-{
-  m_init();
-}
-
 uvm_report_object::uvm_report_object( const std::string& name ) : uvm_object(name)
 {
-  m_init();
+  // moved start of report handler to sepeate method
+  // to enable passing of full name (this is not possible
+  // during constructor initialization)
 }
 
 //----------------------------------------------------------------------
@@ -59,23 +55,66 @@ uvm_report_object::uvm_report_object( const std::string& name ) : uvm_object(nam
 //----------------------------------------------------------------------
 // member function: uvm_report_enabled
 //
-// Returns 1 if the configured verbosity for this severity/id is greater than
-// ~verbosity~ and the action associated with the given ~severity~ and ~id~
-// is not UVM_NO_ACTION, else returns 0.
+// Returns the nearest uvm_report_object when called. From inside a
+// uvm_component, the member function returns this.
+//----------------------------------------------------------------------
+
+uvm_report_object* uvm_report_object::uvm_get_report_object() const
+{
+  return const_cast<uvm_report_object*>(this); // FIXME no const_cast!
+}
+
+//----------------------------------------------------------------------
+// member function: uvm_report_enabled
 //
-// See also <get_report_verbosity_level> and <get_report_action>, and the
+// Returns true if the configured verbosity for this severity/id is greater
+// than ~verbosity~, else returns false.
+//
+// See also <get_report_verbosity_level> and the
 // global version of <uvm_report_enabled>.
 //----------------------------------------------------------------------
 
-int uvm_report_object::uvm_report_enabled( int verbosity,
-                                           uvm_severity severity,
-                                           const std::string& id) const
+bool uvm_report_object::uvm_report_enabled( int verbosity,
+                                            uvm_severity severity,
+                                            const std::string& id ) const
 {
-  if (get_report_verbosity_level(severity, id) < verbosity ||
-      get_report_action(severity,id) == UVM_NO_ACTION)
-    return 0;
+  if (get_report_verbosity_level(severity, id) < verbosity )
+    return false;
   else
-    return 1;
+    return true;
+}
+
+//----------------------------------------------------------------------
+// member function: uvm_report
+//
+//----------------------------------------------------------------------
+
+void uvm_report_object::uvm_report( uvm_severity severity,
+                                    const std::string& id,
+                                    const std::string& message,
+                                    int verbosity,
+                                    const std::string& filename,
+                                    int line,
+                                    const std::string& context_name,
+                                    bool report_enabled_checked ) const
+{
+  uvm_report_message* l_report_message;
+
+  if (verbosity == -1)
+    verbosity = (severity == UVM_ERROR) ? UVM_LOW :
+                (severity == UVM_FATAL) ? UVM_NONE : UVM_MEDIUM;
+
+  if (report_enabled_checked == 0)
+  {
+    if (!uvm_report_enabled(verbosity, severity, id))
+      return;
+  }
+
+  l_report_message = uvm_report_message::new_report_message();
+  l_report_message->set_report_message(severity, id, message,
+                                      verbosity, filename, line, context_name);
+
+  uvm_process_report_message(l_report_message);
 }
 
 //----------------------------------------------------------------------
@@ -89,12 +128,12 @@ void uvm_report_object::uvm_report_info( const std::string& id,
                                          const std::string& message,
                                          int verbosity,
                                          const std::string& filename,
-                                         int line ) const
+                                         int line,
+                                         const std::string& context_name,
+                                         bool report_enabled_checked ) const
 {
-  uvm_report_object* obj = const_cast<uvm_report_object*>(this);
-
-  m_rh->report( UVM_INFO, get_full_name(), id, message, verbosity,
-                filename, line, obj);
+  uvm_report( UVM_INFO, id, message, verbosity,
+              filename, line, context_name, report_enabled_checked);
 }
 
 //----------------------------------------------------------------------
@@ -108,12 +147,12 @@ void uvm_report_object::uvm_report_warning( const std::string& id,
                                             const std::string& message,
                                             int verbosity,
                                             const std::string& filename,
-                                            int line ) const
+                                            int line,
+                                            const std::string& context_name,
+                                            bool report_enabled_checked ) const
 {
-  uvm_report_object* obj = const_cast<uvm_report_object*>(this);
-
-  m_rh->report( UVM_WARNING, get_full_name(), id, message, verbosity,
-                filename, line, obj);
+  uvm_report( UVM_WARNING, id, message, verbosity,
+              filename, line, context_name, report_enabled_checked);
 }
 
 //----------------------------------------------------------------------
@@ -127,12 +166,12 @@ void uvm_report_object::uvm_report_error( const std::string& id,
                                           const std::string& message,
                                           int verbosity,
                                           const std::string& filename,
-                                          int line) const
+                                          int line,
+                                          const std::string& context_name,
+                                          bool report_enabled_checked ) const
 {
-  uvm_report_object* obj = const_cast<uvm_report_object*>(this);
-
-  m_rh->report( UVM_ERROR, get_full_name(), id, message, verbosity,
-                filename, line, obj);
+  uvm_report( UVM_ERROR, id, message, verbosity,
+              filename, line, context_name, report_enabled_checked);
 }
 
 //----------------------------------------------------------------------
@@ -147,14 +186,29 @@ void uvm_report_object::uvm_report_fatal( const std::string& id,
                                           const std::string& message,
                                           int verbosity,
                                           const std::string& filename,
-                                          int line ) const
+                                          int line,
+                                          const std::string& context_name,
+                                          bool report_enabled_checked ) const
 {
-  uvm_report_object* obj = const_cast<uvm_report_object*>(this);
-
-  m_rh->report( UVM_FATAL, get_full_name(), id, message, verbosity,
-                filename, line, obj);
+  uvm_report( UVM_FATAL, id, message, verbosity,
+              filename, line, context_name, report_enabled_checked);
 }
 
+//----------------------------------------------------------------------
+// member function: uvm_process_report_message (virtual)
+//
+// This member function takes a preformed uvm_report_message, populates it with
+// the report object and passes it to the report handler for processing.
+// It is expected to be checked for verbosity and populated.
+//----------------------------------------------------------------------
+void uvm_report_object::uvm_process_report_message( uvm_report_message* report_message ) const
+{
+  // TODO fix const
+  uvm_report_object* obj = const_cast<uvm_report_object*>(this);
+  report_message->set_report_object(obj);
+
+  m_rh->process_report_message(report_message);
+}
 
 //--------------------------------------------------------------------------
 // Group: Verbosity Configuration
@@ -179,7 +233,10 @@ int uvm_report_object::get_report_verbosity_level( uvm_severity severity,
 // member function: get_report_max_verbosity_level
 //----------------------------------------------------------------------
 
-// TODO
+int uvm_report_object::get_report_max_verbosity_level() const
+{
+  return m_rh->m_max_verbosity_level;
+}
 
 //----------------------------------------------------------------------
 // member function: set_report_verbosity_level
@@ -296,7 +353,7 @@ void uvm_report_object::set_report_severity_id_action( uvm_severity severity,
 
 //TODO returned int?
 UVM_FILE uvm_report_object::get_report_file_handle( uvm_severity severity,
-                                                     const std::string& id) const
+                                                    const std::string& id) const
 {
   return m_rh->get_file_handle( severity, id );
 }
@@ -429,8 +486,21 @@ uvm_report_handler* uvm_report_object::get_report_handler() const
 
 void uvm_report_object::reset_report_handler()
 {
-  m_rh->m_initialize();
+  m_rh->initialize();
 }
+
+//----------------------------------------------------------------------
+// member function: start_report_handler
+//
+// Implementation defined
+// Start the report handler
+//----------------------------------------------------------------------
+
+void uvm_report_object::start_report_handler(const std::string& name)
+{
+  m_rh = uvm_report_handler::type_id::create(name);
+}
+
 
 
 
@@ -442,126 +512,11 @@ void uvm_report_object::reset_report_handler()
 
 
 //----------------------------------------------------------------------------
-// Group: Callbacks
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------
-// member function: report_info_hook (virtual)
-//
-//----------------------------------------------------------------------
-
-bool uvm_report_object::report_info_hook( const std::string& id,
-                                          const std::string& message,
-                                          int verbosity,
-                                          const std::string& filename,
-                                          int line ) const
-{
-  return true;
-}
-
-//----------------------------------------------------------------------
-// member function: report_error_hook (virtual)
-//
-//----------------------------------------------------------------------
-
-bool uvm_report_object::report_error_hook( const std::string& id,
-                                           const std::string& message,
-                                           int verbosity,
-                                           const std::string& filename,
-                                           int line ) const
-{
-  return true;
-}
-
-//----------------------------------------------------------------------
-// member function: report_warning_hook (virtual)
-//
-//----------------------------------------------------------------------
-
-bool uvm_report_object::report_warning_hook( const std::string& id,
-                                             const std::string& message,
-                                             int verbosity,
-                                             const std::string& filename,
-                                             int line ) const
-{
-  return true;
-}
-
-//----------------------------------------------------------------------
-// member function: report_fatal_hook (virtual)
-//
-//----------------------------------------------------------------------
-
-bool uvm_report_object::report_fatal_hook( const std::string& id,
-                                           const std::string& message,
-                                           int verbosity,
-                                           const std::string& filename,
-                                           int line ) const
-{
-  return true;
-}
-
-//----------------------------------------------------------------------
-// member function: report_info_hook (virtual)
-//
-//----------------------------------------------------------------------
-
-bool uvm_report_object::report_hook( const std::string& id,
-                                     const std::string& message,
-                                     int verbosity,
-                                     const std::string& filename,
-                                     int line ) const
-{
-  return true;
-}
-
-
-//----------------------------------------------------------------------
-// member function: uvm_get_max_verbosity
-//
-//----------------------------------------------------------------------
-
-int uvm_report_object::uvm_get_max_verbosity() const
-{
-  return m_rh->m_max_verbosity_level;
-}
-
-//----------------------------------------------------------------------------
 // destructor
 //----------------------------------------------------------------------------
 
 uvm_report_object::~uvm_report_object()
 {
-}
-
-//----------------------------------------------------------------------------
-// member function: m_init
-//
-// Implementation-defined member function
-//----------------------------------------------------------------------------
-
-void uvm_report_object::m_init()
-{
-  // TODO remove
-  //id_verbosities.clear(); //TODO move to reporting layer
-  //severity_id_verbosities.clear();
-  //m_max_verbosity_level = UVM_MEDIUM;
-
-  m_rh = new uvm_report_handler();
-}
-
-//----------------------------------------------------------------------------
-// member function: get
-//
-// Implementation-defined member function
-//----------------------------------------------------------------------------
-
-uvm_report_object* uvm_report_object::get()
-{
-  if (m_inst == NULL) {
-    m_inst = new uvm_report_object();
-  }
-  return m_inst;
 }
 
 

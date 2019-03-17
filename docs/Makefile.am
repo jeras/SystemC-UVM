@@ -5,7 +5,8 @@ DOXYGEN = doxygen
 DOXYFILE = uvmsc/doxygen/Doxyfile
 
 DOC_FILES = \
-	uvm-systemc-language-reference-manual.pdf
+	uvm-systemc-language-reference-manual.pdf \
+	UVM_goes_Universal_-_Introducing_UVM_in_SystemC_-_DVCON_Europe_2015.pdf
 
 ## add documentation to distribution
 EXTRA_DIST += \

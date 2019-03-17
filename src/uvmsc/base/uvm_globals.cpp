@@ -25,6 +25,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <iostream>
+#include <string>
+#include <cstdlib>
 
 #include <systemc>
 #include "sysc/kernel/sc_module.h"
@@ -32,6 +35,8 @@
 
 #include "uvmsc/base/uvm_globals.h"
 #include "uvmsc/base/uvm_root.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 #include "uvmsc/conf/uvm_config_db.h"
 
 #if !defined(_MSC_VER)
@@ -66,7 +71,12 @@ namespace uvm {
 
 void run_test( const std::string& test_name )
 {
-  uvm_root::get()->run_test(test_name);
+  uvm_root* top;
+  uvm_coreservice_t* cs;
+  cs = uvm_coreservice_t::get();
+  top = cs->get_root();
+
+  top->run_test(test_name);
 }
 
 //------------------------------------------------------------------------------
@@ -77,7 +87,9 @@ void run_test( const std::string& test_name )
 
 void print_topology( uvm_printer* printer )
 {
-  uvm_root::get()->print_topology(printer);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+  top->print_topology(printer);
 }
 
 //------------------------------------------------------------------------------
@@ -108,47 +120,90 @@ bool uvm_report_enabled( const int& verbosity,
                          const uvm_severity& severity,
                          const std::string& id )
 {
-  return uvm_root::get()->uvm_report_enabled(verbosity,severity,id);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  return top->uvm_report_enabled(verbosity,severity,id);
 }
 
+void uvm_report( uvm_severity severity,
+                 const std::string& id,
+                 const std::string& message,
+                 int verbosity,
+                 const std::string& filename,
+                 int line,
+                 const std::string& context_name,
+                 bool report_enabled_checked)
+{
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  if( verbosity == -1)
+    verbosity = (severity == UVM_ERROR) ? UVM_LOW :
+      (severity == UVM_FATAL) ? UVM_NONE : UVM_MEDIUM;
+
+  top->uvm_report(severity, id, message, verbosity, filename, line, context_name, report_enabled_checked);
+}
 
 // Function: uvm_report_info
 
 void uvm_report_info( const std::string& id,
                       const std::string& message,
                       int verbosity,
-                      const std::string& fname,
-                      int line )
+                      const std::string& filename,
+                      int line,
+                      const std::string& context_name,
+                      bool report_enabled_checked )
 {
-  uvm_root::get()->uvm_report_info(id, message, verbosity, fname, line);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  top->uvm_report_info(id, message, verbosity, filename, line);
 }
 
 
 void uvm_report_warning( const std::string& id,
                          const std::string& message,
                          int verbosity,
-                         const std::string& fname,
-                         int line )
+                         const std::string& filename,
+                         int line,
+                         const std::string& context_name,
+                         bool report_enabled_checked )
+
 {
-  uvm_root::get()->uvm_report_warning(id, message, verbosity, fname, line);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  top->uvm_report_warning(id, message, verbosity, filename, line);
 }
 
 void uvm_report_error( const std::string& id,
                        const std::string& message,
                        int verbosity,
-                       const std::string& fname,
-                       int line )
+                       const std::string& filename,
+                       int line,
+                       const std::string&  context_name,
+                       bool report_enabled_checked )
 {
-  uvm_root::get()->uvm_report_error(id, message, verbosity, fname, line);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  top->uvm_report_error(id, message, verbosity, filename, line);
 }
 
 void uvm_report_fatal( const std::string& id,
                        const std::string& message,
                        int verbosity,
-                       const std::string& fname,
-                       int line )
+                       const std::string& filename,
+                       int line,
+                       const std::string& context_name,
+                       bool report_enabled_checked )
+
 {
-  uvm_root::get()->uvm_report_fatal(id, message, verbosity, fname, line);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  top->uvm_report_fatal(id, message, verbosity, filename, line);
 }
 
 // TODO temporary set verbosity level. Should be moved to
@@ -156,7 +211,10 @@ void uvm_report_fatal( const std::string& id,
 
 void uvm_set_verbosity_level(int verbosity_level)
 {
-  uvm_root::get()->set_report_verbosity_level_hier(verbosity_level);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  top->set_report_verbosity_level_hier(verbosity_level);
 }
 
 
@@ -465,6 +523,149 @@ int uvm_re_match_char(const char *re, const char *str)
   return err;
 }
 #endif // HAVE_CXX11_REGEX
+
+//--------------------------------------------------------------------
+// uvm_extract_path_index
+//
+// Extract object name and indexes for bitfield writes. Used for
+// the backdoor mechanism
+//--------------------------------------------------------------------
+
+int uvm_extract_path_index(const std::string& path, std::string& objname,
+    int& begin, int& end )
+{
+  std::string regex_str;
+  std::size_t found;
+  std::string str = path;
+  std::string root_str= "$root.";
+
+  // first, remove $root, if used
+  found = str.find(root_str);
+  if (found!=std::string::npos)
+    str.replace(found,root_str.length(),"");
+
+  // check for notation: bla.bla.range(1,2)
+  found = str.find(".range(");
+  if (found!=std::string::npos)
+    regex_str = "(.*).range\\(([0-9]+)\\,([0-9]+)\\)$";
+  else
+  {
+    // check for notation: bla.bla(1,2)
+    if(*str.rbegin() == ')')
+      regex_str = "(.*)\\(([0-9]+)\\,([0-9]+)\\)$";
+
+    // check for notation: bla.bla[1:2]
+    if(*str.rbegin() == ']')
+      regex_str = "(.*)\\[([0-9]+):?([0-9]+)?\\]$";
+    else // all other notations
+      regex_str = "(.*)";
+  }
+
+  std::vector<std::string> str_vector = uvm_re_match2(regex_str, str);
+
+  if (str_vector.size()<3)
+  {
+    objname = str;
+    begin = -1;
+    end = -1;
+  }
+
+  if (str_vector.size()==3)
+  {
+    objname = str_vector[1];
+    begin = std::atoi(str_vector[2].c_str());
+    end = begin;
+  }
+
+  if (str_vector.size()==4)
+  {
+    objname = str_vector[1];
+    begin = std::atoi(str_vector[2].c_str());
+    end = std::atoi(str_vector[3].c_str());
+  }
+
+  return 1;
+}
+
+// improved regex matching
+std::vector<std::string> uvm_re_match2(const std::string& expr, const std::string& path)
+{
+  std::vector<std::string> str;
+
+#if defined(HAVE_CXX11_REGEX)
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1500) && (_MSC_VER < 1700)
+  // MSVC 2008 and 2010: regex is in nested namespace std::tr1
+  using namespace std::tr1::regex;
+  using namespace std::tr1::smatch;
+  using namespace std::tr1::regex_match
+#else
+  using namespace std::regex;
+  using namespace std::smatch;
+  using namespace std::regex_match
+#endif
+  regex expression(expr);
+  smatch result;
+
+  if (!regex_match(path, result, expression))
+  {
+    UVM_ERROR("REGEXERR", "No regex match.");
+    return str;
+  };
+
+  for (int i = 0; i < result.size(); i++)
+  {
+    //std::cout << "result " << i << ": " << result.str(i) << std::endl;
+    if (!result(i).empty())
+      str.push_back(result(i));
+  }
+
+#else // fallback to POSIX regex
+
+  size_t maxGroups = 4;
+  regex_t regexCompiled;
+  std::vector<regmatch_t> groupArray( maxGroups );
+  const char * cursor;
+
+  if (regcomp(&regexCompiled, expr.c_str(), REG_EXTENDED))
+  {
+    UVM_ERROR("REGEXERR", "Could not compile regular expression.");
+    return str;
+  };
+
+  cursor = path.c_str();
+
+  if (regexec(&regexCompiled, cursor, maxGroups, &groupArray[0], 0))
+  {
+    UVM_ERROR("REGEXERR", "No regex match.");
+    return str;
+  };
+
+  unsigned int g = 0;
+  for (g = 0; g < maxGroups; g++)
+  {
+    if (groupArray[g].rm_so == -1)
+      break;  // No more groups
+
+    std::string cursorCopy(cursor + groupArray[g].rm_so,
+                           cursor + groupArray[g].rm_eo );
+
+    /*
+    std::cout << "Group " << g << ": ["
+        << groupArray[g].rm_so << "-" << groupArray[g].rm_eo
+        << "]: " << cursorCopy
+        << std::endl;
+    */
+
+    str.push_back(cursorCopy);
+  }
+
+  regfree(&regexCompiled);
+
+#endif // HAVE_CXX11_REGEX
+
+  return str;
+}
 
 
 } // namespace uvm

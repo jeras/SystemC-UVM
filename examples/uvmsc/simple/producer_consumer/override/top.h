@@ -50,7 +50,7 @@ class top : public uvm::uvm_env
     // set up type override for consumer templated by packet
     // replace ordinary consumer with fifo_consumer using one of the three methods below
 
-    //set_type_override_by_type( consumer<packet>::get_type(), fifo_consumer<packet>::get_type() );
+    set_type_override_by_type( consumer<packet>::get_type(), fifo_consumer<packet>::get_type() );
     //set_type_override("consumer<T>", "fifo_consumer<T>");
     //set_inst_override_by_type("parent_component.consumer", consumer<packet>::get_type(), fifo_consumer<packet>::get_type() );
 

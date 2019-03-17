@@ -34,6 +34,7 @@ class uvm_printer;
 class uvm_table_printer;
 class uvm_line_printer;
 class uvm_tree_printer;
+class uvm_comparer;
 
 //----------------------------------------------------------------------
 // Macro: UVM_DEFAULT_TIMEOUT
@@ -387,13 +388,14 @@ typedef int uvm_action;
 
 typedef enum
 {
-  UVM_NO_ACTION = 0, // 0b000000 
-  UVM_DISPLAY   = 1, // 0b000001
-  UVM_LOG       = 2, // 0b000010
-  UVM_COUNT     = 4, // 0b000100
-  UVM_EXIT      = 8, // 0b001000
-  UVM_CALL_HOOK = 16, // 0b010000
-  UVM_STOP      = 32 // 0b100000
+  UVM_NO_ACTION = 0,  // 0b0000000
+  UVM_DISPLAY   = 1,  // 0b0000001
+  UVM_LOG       = 2,  // 0b0000010
+  UVM_COUNT     = 4,  // 0b0000100
+  UVM_EXIT      = 8,  // 0b0001000
+  UVM_CALL_HOOK = 16, // 0b0010000
+  UVM_STOP      = 32, // 0b0100000
+  UVM_RM_RECORD = 64  // 0b1000000
 } uvm_action_type;
 
 
@@ -473,7 +475,7 @@ typedef enum {
 //----------------------------------------------------------------------
 
 #ifndef UVM_MAX_STREAMBITS
-#define UVM_MAX_STREAMBITS 64 //FIXME: should be 4096, but that is not supported by SystemC
+#define UVM_MAX_STREAMBITS 4096
 #endif
 
 #define UVM_STREAMBITS UVM_MAX_STREAMBITS;
@@ -496,10 +498,26 @@ typedef enum {
 // These are implementation defined
 //----------------------------------------------------------------------
 
-typedef sc_dt::sc_uint<64> uvm_bitstream_t; // FIXME: should be 4096,
-                                           // but that is not supported by SystemC
+template<bool isSmallStream>
+struct uvm_bitstream_t_select;
+
+template<>
+struct uvm_bitstream_t_select<true> // bitstream size always smaller than 64-bit
+{
+  typedef sc_dt::sc_uint<UVM_MAX_STREAMBITS> type;
+};
+
+template<>
+struct uvm_bitstream_t_select<false> // arbitrary sized bitstreams
+{
+  typedef sc_dt::sc_biguint<UVM_MAX_STREAMBITS> type;
+};
+
+typedef uvm_bitstream_t_select<((UVM_MAX_STREAMBITS)<=64)>::type uvm_bitstream_t;
+
 
 typedef sc_dt::sc_uint<64> uvm_integral_t;
+
 
 typedef std::ostream* UVM_FILE;
 
@@ -510,6 +528,16 @@ typedef std::ostream* UVM_FILE;
 //----------------------------------------------------------------------
 
 typedef const std::string& uvm_object_name;
+
+//----------------------------------------------------------------------
+// Variable: uvm_default_comparer
+//
+// The default compare policy. Used when calls to <uvm_object::compare>
+// do not specify a comparer policy.
+//----------------------------------------------------------------------
+
+extern uvm_comparer* uvm_default_comparer; // uvm_comparer::init();
+
 
 } /* namespace uvm */
 

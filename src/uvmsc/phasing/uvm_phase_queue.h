@@ -116,7 +116,11 @@ void uvm_phase_queue<T>::put(T m)
     sc_core::wait(not_full_anymore);
 
   m_elements.push(m);
-  for_content.notify();
+
+  if (!sc_core::sc_is_running())
+    for_content.notify(sc_core::SC_ZERO_TIME);
+  else
+    for_content.notify();
 }
 
 //----------------------------------------------------------------------------
@@ -132,15 +136,16 @@ void uvm_phase_queue<T>::put(T m)
 template <typename T>
 int uvm_phase_queue<T>::try_put(T m)
 {
-  //cout << "try put called" << endl;
-
   if (m_queue_size!=0 && m_elements.size() >= m_queue_size)
     return 0;
 
   m_elements.push(m);
-  for_content.notify();
 
-  //cout << "size:" << m_elements.size() << endl;
+  if (!sc_core::sc_is_running())
+    for_content.notify(sc_core::SC_ZERO_TIME);
+  else
+    for_content.notify();
+
   return 1;
 }
 
@@ -160,7 +165,11 @@ void uvm_phase_queue<T>::get(T& m)
 
   m = m_elements.front(); // get next oldest = front element
   m_elements.pop();       // and remove it
-  not_full_anymore.notify();
+
+  if (!sc_core::sc_is_running())
+    not_full_anymore.notify(sc_core::SC_ZERO_TIME);
+  else
+    not_full_anymore.notify();
 }
 
 
@@ -180,7 +189,12 @@ int uvm_phase_queue<T>::try_get(T& m)
 
   m = m_elements.front(); // get next oldest = front element
   m_elements.pop();       // and remove it
-  not_full_anymore.notify();
+
+  if (!sc_core::sc_is_running())
+    not_full_anymore.notify(sc_core::SC_ZERO_TIME);
+  else
+    not_full_anymore.notify();
+
   return 1;
 }
 
@@ -218,7 +232,11 @@ void uvm_phase_queue<T>::empty()
 {
   while (m_elements.size() != 0)
     m_elements.pop();
-  for_content.notify();
+
+  if (!sc_core::sc_is_running())
+    for_content.notify(sc_core::SC_ZERO_TIME);
+  else
+    for_content.notify();
 }
 
 //////////////

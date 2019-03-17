@@ -52,6 +52,10 @@ class uvm_sequence_item;
 
 class uvm_sequencer_base : public uvm_component
 {
+  friend class uvm_reg_map;
+  friend class uvm_reg;
+  template <typename BASE> friend class uvm_req_sequence;
+  friend class uvm_reg_indirect_data;
   template <typename REQ, typename RSP> friend class uvm_sequencer;
   template <typename REQ, typename RSP> friend class uvm_sequencer_param_base;
   friend class uvm_sequence_base;
@@ -133,6 +137,8 @@ public:
 
   void m_lock_req( uvm_sequence_base* sequence_ptr, bool lock );
   void m_unlock_req( uvm_sequence_base* sequence_ptr );
+
+  void m_start_default_seq_proc(uvm_sequence_base* seq);
 
   // member variables
 

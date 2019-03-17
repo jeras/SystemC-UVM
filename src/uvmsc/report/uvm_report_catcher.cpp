@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-//   Copyright 2013-2014 NXP B.V.
+//   Copyright 2013-2016 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2009 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -24,11 +24,13 @@
 #include <iomanip>
 
 #include "uvmsc/report/uvm_report_object.h"
+#include "uvmsc/report/uvm_report_message.h"
 #include "uvmsc/report/uvm_report_catcher.h"
 #include "uvmsc/report/uvm_report_catcher_data.h"
 #include "uvmsc/report/uvm_report_handler.h"
 #include "uvmsc/report/uvm_report_server.h"
 #include "uvmsc/macros/uvm_callback_defines.h"
+#include "uvmsc/macros/uvm_string_defines.h"
 
 namespace uvm {
 
@@ -37,9 +39,9 @@ namespace uvm {
 //------------------------------------------------------------------------------
 
 uvm_report_catcher::uvm_report_catcher( const std::string& name )
-  : uvm_callback(name)
+: uvm_callback(name)
 {
-	uvm_report_catcher_data::get().do_report = true;
+  uvm_report_catcher_data::get().do_report = true;
 
   // register the catcher callback
   // this differs from UVMSV since we cannot register using the macro
@@ -60,7 +62,7 @@ uvm_report_catcher::uvm_report_catcher( const std::string& name )
 
 uvm_report_object* uvm_report_catcher::get_client() const
 {
-  return uvm_report_catcher_data::get().m_client;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_report_object();
 }
 
 //------------------------------------------------------------------------------
@@ -74,22 +76,30 @@ uvm_report_object* uvm_report_catcher::get_client() const
 
 uvm_severity uvm_report_catcher::get_severity() const
 {
-  return uvm_report_catcher_data::get().m_modified_severity;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_severity();
 }
 
 //------------------------------------------------------------------------------
 // member function: get_context
 //
-//! Returns the context (source) of the message that is currently being
+//! Returns the context name of the message that is currently being
 //! processed. This is typically the full hierarchical name of the component
-//! that issued the message. However, when the message comes via a report
-//! handler that is not associated with a component, the context is
-//! user-defined.
+//! that issued the message. However, if user-defined context is set from
+//! a uvm_report_message, the user-defined context will be returned.
 //------------------------------------------------------------------------------
 
 std::string uvm_report_catcher::get_context() const
 {
-  return uvm_report_catcher_data::get().m_name;
+  std::string context_str;
+
+  context_str = uvm_report_catcher_data::get().m_modified_report_message->get_context();
+  if (context_str.empty())
+  {
+    uvm_report_handler* rh = uvm_report_catcher_data::get().m_modified_report_message->get_report_handler();
+    context_str = rh->get_full_name();
+  }
+
+  return context_str;
 }
 
 //------------------------------------------------------------------------------
@@ -103,7 +113,7 @@ std::string uvm_report_catcher::get_context() const
 
 int uvm_report_catcher::get_verbosity() const
 {
-  return uvm_report_catcher_data::get().m_modified_verbosity;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_verbosity();
 }
 
 //------------------------------------------------------------------------------
@@ -117,7 +127,7 @@ int uvm_report_catcher::get_verbosity() const
 
 std::string uvm_report_catcher::get_id() const
 {
-  return uvm_report_catcher_data::get().m_modified_id;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_id();
 }
 
 //------------------------------------------------------------------------------
@@ -131,7 +141,7 @@ std::string uvm_report_catcher::get_id() const
 
 std::string uvm_report_catcher::get_message() const
 {
-  return uvm_report_catcher_data::get().m_modified_message;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_message();
 }
 
 //------------------------------------------------------------------------------
@@ -145,7 +155,7 @@ std::string uvm_report_catcher::get_message() const
 
 uvm_action uvm_report_catcher::get_action() const
 {
-  return uvm_report_catcher_data::get().m_modified_action;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_action();
 }
 
 //------------------------------------------------------------------------------
@@ -156,7 +166,7 @@ uvm_action uvm_report_catcher::get_action() const
 
 std::string uvm_report_catcher::get_fname() const
 {
-  return uvm_report_catcher_data::get().m_file_name;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_filename();
 }
 
 //------------------------------------------------------------------------------
@@ -167,7 +177,18 @@ std::string uvm_report_catcher::get_fname() const
 
 int uvm_report_catcher::get_line() const
 {
-  return uvm_report_catcher_data::get().m_line_number;
+  return uvm_report_catcher_data::get().m_modified_report_message->get_line();
+}
+
+//------------------------------------------------------------------------------
+// member function: get_element_container
+//
+//! Returns the element container of the message.
+//------------------------------------------------------------------------------
+
+uvm_report_message_element_container* uvm_report_catcher::get_element_container() const
+{
+  return uvm_report_catcher_data::get().m_modified_report_message->get_element_container();
 }
 
 //------------------------------------------------------------------------------
@@ -183,7 +204,7 @@ int uvm_report_catcher::get_line() const
 
 void uvm_report_catcher::set_severity( uvm_severity severity )
 {
-  uvm_report_catcher_data::get().m_modified_severity = severity;
+  uvm_report_catcher_data::get().m_modified_report_message->set_severity(severity);
 }
 
 //------------------------------------------------------------------------------
@@ -195,7 +216,7 @@ void uvm_report_catcher::set_severity( uvm_severity severity )
 
 void uvm_report_catcher::set_verbosity( int verbosity )
 {
-  uvm_report_catcher_data::get().m_modified_verbosity = verbosity;
+  uvm_report_catcher_data::get().m_modified_report_message->set_verbosity(verbosity);
 }
 
 //------------------------------------------------------------------------------
@@ -207,7 +228,7 @@ void uvm_report_catcher::set_verbosity( int verbosity )
 
 void uvm_report_catcher::set_id( const std::string& id )
 {
-  uvm_report_catcher_data::get().m_modified_id = id;
+  uvm_report_catcher_data::get().m_modified_report_message->set_id(id);
 }
 
 //------------------------------------------------------------------------------
@@ -219,7 +240,7 @@ void uvm_report_catcher::set_id( const std::string& id )
 
 void uvm_report_catcher::set_message( const std::string& message )
 {
-  uvm_report_catcher_data::get().m_modified_message = message;
+  uvm_report_catcher_data::get().m_modified_report_message->set_message(message);
 }
 
 //------------------------------------------------------------------------------
@@ -231,9 +252,71 @@ void uvm_report_catcher::set_message( const std::string& message )
 
 void uvm_report_catcher::set_action( uvm_action action )
 {
-  uvm_report_catcher_data::get().m_modified_action = action;
-  uvm_report_catcher_data::get().m_set_action_called = true;
+  uvm_report_catcher_data::get().m_modified_report_message->set_action(action);
 }
+
+//------------------------------------------------------------------------------
+// member function: set_context
+//
+//! Change the context of the message to ~context_str~. Any other
+//! report catchers will see the modified value.
+//------------------------------------------------------------------------------
+
+void uvm_report_catcher::set_context( const std::string& context_str )
+{
+  uvm_report_catcher_data::get().m_modified_report_message->set_context(context_str);
+}
+
+//------------------------------------------------------------------------------
+// member function: add_int
+//
+//! Add an integral type of the name ~name~ and value ~value~ to
+//! the message.  The required ~size~ field indicates the size of ~value~.
+//! The required ~radix~ field determines how to display and
+//! record the field. Any other report catchers will see the newly
+//! added element.
+//------------------------------------------------------------------------------
+
+void uvm_report_catcher::add_int( const std::string& name,
+                                  uvm_bitstream_t value,
+                                  int size,
+                                  uvm_radix_enum radix,
+                                  uvm_action action )
+{
+  uvm_report_catcher_data::get().m_modified_report_message->add_int(name, value, size, radix, action);
+}
+
+
+//------------------------------------------------------------------------------
+// member function: add_string
+//
+//! Adds a string of the name ~name~ and value ~value~ to the
+//! message. Any other report catchers will see the newly
+//! added element.
+//------------------------------------------------------------------------------
+
+void uvm_report_catcher::add_string( const std::string& name,
+                                     const std::string& value,
+                                     uvm_action action )
+{
+  uvm_report_catcher_data::get().m_modified_report_message->add_string(name, value, action);
+}
+
+//------------------------------------------------------------------------------
+// member function: add_object
+//
+//! Adds a uvm_object of the name ~name~ and reference ~obj~ to
+//! the message. Any other report catchers will see the newly
+//! added element.
+//------------------------------------------------------------------------------
+
+void uvm_report_catcher::add_object( const std::string& name,
+                                     uvm_object* obj,
+                                     uvm_action action )
+{
+  uvm_report_catcher_data::get().m_modified_report_message->add_object(name, obj, action);
+}
+
 
 //------------------------------------------------------------------------------
 // Group: Debug
@@ -274,10 +357,11 @@ void uvm_report_catcher::print_catcher( UVM_FILE file )
   std::ostringstream msg;
   std::string enabled;
   uvm_report_catcher* catcher;
+  std::vector<std::string> q;
 
   static uvm_report_cb_iter* iter = new uvm_report_cb_iter(NULL);
 
-  f_display(file, "-------------UVM REPORT CATCHERS----------------------------");
+  q.push_back("-------------UVM REPORT CATCHERS----------------------------\n");
 
   catcher = iter->first();
 
@@ -291,12 +375,19 @@ void uvm_report_catcher::print_catcher( UVM_FILE file )
     msg << std::setw(20)
         << catcher->get_name()
         << " : "
-        << enabled;
-    f_display(file, msg.str());
+        << enabled
+        << "\n";
+    q.push_back(msg.str());
+
     catcher = iter->next();
   }
 
-  f_display(file, "--------------------------------------------------------------");
+  q.push_back("--------------------------------------------------------------\n");
+
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  UVM_INFO_CONTEXT("UVM/REPORT/CATCHER", UVM_STRING_QUEUE_STREAMING_PACK(q), UVM_LOW, top)
 }
 
 //------------------------------------------------------------------------------
@@ -310,7 +401,7 @@ void uvm_report_catcher::print_catcher( UVM_FILE file )
 
 void uvm_report_catcher::debug_report_catcher( int what )
 {
-	uvm_report_catcher_data::get().m_debug_flags = what;
+  uvm_report_catcher_data::get().m_debug_flags = what;
 }
 
 //------------------------------------------------------------------------------
@@ -326,6 +417,7 @@ void uvm_report_catcher::debug_report_catcher( int what )
 // current message being processed.
 //------------------------------------------------------------------------------
 
+//TODO catch function?
 //action_e catch();
 
 
@@ -344,22 +436,13 @@ void uvm_report_catcher::uvm_report_fatal( const std::string& id,
                                            const std::string& message,
                                            int verbosity,
                                            const std::string& fname,
-                                           int line )
+                                           int line,
+                                           const std::string& context_name,
+                                           bool report_enabled_checked )
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
-  std::string m;
-  uvm_action a;
-  UVM_FILE f;
-  uvm_report_handler* rh;
+  uvm_report(UVM_FATAL, id, message, UVM_NONE, fname, line,
+             context_name, report_enabled_checked);
 
-  rh   = urcd.m_client->get_report_handler();
-  a    = rh->get_action(UVM_FATAL,id);
-  f    = rh->get_file_handle(UVM_FATAL,id);
-
-  m    = urcd.m_server->compose_message( UVM_FATAL, urcd.m_name, id, message, fname, line );
-
-  urcd.m_server->process_report( UVM_FATAL, urcd.m_name, id, message, a, f, fname, line,
-                            m, verbosity, urcd.m_client );
 }
 
 
@@ -374,22 +457,12 @@ void uvm_report_catcher::uvm_report_error( const std::string& id,
                                            const std::string& message,
                                            int verbosity,
                                            const std::string& fname,
-                                           int line )
+                                           int line,
+                                           const std::string& context_name,
+                                           bool report_enabled_checked )
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
-  std::string m;
-  uvm_action a;
-  UVM_FILE f;
-  uvm_report_handler* rh;
-
-  rh   = urcd.m_client->get_report_handler();
-  a    = rh->get_action(UVM_ERROR,id);
-  f    = rh->get_file_handle(UVM_ERROR,id);
-
-  m    = urcd.m_server->compose_message(UVM_ERROR, urcd.m_name, id, message, fname, line);
-
-  urcd.m_server->process_report( UVM_ERROR, urcd.m_name, id, message, a, f, fname, line,
-                            m, verbosity, urcd.m_client);
+  uvm_report(UVM_ERROR, id, message, UVM_NONE, fname, line,
+             context_name, report_enabled_checked);
 }
 
 
@@ -404,22 +477,12 @@ void uvm_report_catcher::uvm_report_warning( const std::string& id,
                                              const std::string& message,
                                              int verbosity,
                                              const std::string& fname,
-                                             int line )
+                                             int line,
+                                             const std::string& context_name,
+                                             bool report_enabled_checked )
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
-  std::string m;
-  uvm_action a;
-  UVM_FILE f;
-  uvm_report_handler* rh;
-
-  rh   = urcd.m_client->get_report_handler();
-  a    = rh->get_action(UVM_WARNING,id);
-  f    = rh->get_file_handle(UVM_WARNING,id);
-
-  m    = urcd.m_server->compose_message( UVM_WARNING, urcd.m_name, id, message, fname, line );
-
-  urcd.m_server->process_report( UVM_WARNING, urcd.m_name, id, message, a, f, fname, line,
-                            m, verbosity, urcd.m_client);
+  uvm_report(UVM_WARNING, id, message, UVM_NONE, fname, line,
+             context_name, report_enabled_checked);
 }
 
 
@@ -434,23 +497,12 @@ void uvm_report_catcher::uvm_report_info( const std::string& id,
                                           const std::string& message,
                                           int verbosity,
                                           const std::string& fname,
-                                          int line )
+                                          int line,
+                                          const std::string& context_name,
+                                          bool report_enabled_checked )
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
-  std::string m;
-  uvm_action a;
-  UVM_FILE f;
-  uvm_report_handler* rh;
-
-  rh   = urcd.m_client->get_report_handler();
-  a    = rh->get_action(UVM_INFO,id);
-  f    = rh->get_file_handle(UVM_INFO,id);
-
-  m     = urcd.m_server->compose_message( UVM_INFO, urcd.m_name, id, message, fname, line);
-
-  urcd.m_server->process_report( UVM_INFO, urcd.m_name, id, message, a, f, fname, line,
-                            m, verbosity, urcd.m_client);
-
+  uvm_report(UVM_INFO, id, message, verbosity, fname, line,
+             context_name, report_enabled_checked);
 }
 
 //------------------------------------------------------------------------------
@@ -465,22 +517,23 @@ void uvm_report_catcher::uvm_report( uvm_severity severity,
                                      const std::string& message,
                                      int verbosity,
                                      const std::string& fname,
-                                     int line )
+                                     int line,
+                                     const std::string& context_name,
+                                     bool report_enabled_checked )
+
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
-  std::string m;
-  uvm_action a;
-  UVM_FILE f;
-  uvm_report_handler* rh;
+  uvm_report_message* l_report_message;
+  if (report_enabled_checked == false)
+  {
+    if (!uvm_report_enabled(verbosity, severity, id))
+      return;
+  }
 
-  rh = urcd.m_client->get_report_handler();
-  a = rh->get_action(severity, id);
-  f = rh->get_file_handle(severity, id);
+  l_report_message = uvm_report_message::new_report_message();
+  l_report_message->set_report_message(severity, id, message,
+                                      verbosity, fname, line, context_name);
+  uvm_process_report_message(l_report_message);
 
-  m = urcd.m_server->compose_message(severity, urcd.m_name, id, message, fname, line);
-
-  urcd.m_server->process_report( severity, urcd.m_name, id, message, a , f, fname, line,
-                            m, verbosity, urcd.m_client);
 }
 
 //------------------------------------------------------------------------------
@@ -495,33 +548,19 @@ void uvm_report_catcher::uvm_report( uvm_severity severity,
 
 void uvm_report_catcher::issue()
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
-  std::string m;
-  uvm_action a;
-  UVM_FILE f;
-  uvm_report_handler* rh;
+  std::string composed_message;
 
-  rh = urcd.m_client->get_report_handler();
-  a  =  urcd.m_modified_action;
+  uvm_report_catcher_data& rcd = uvm_report_catcher_data::get();
 
-  f  = rh->get_file_handle(urcd.m_modified_severity, urcd.m_modified_id);
+  uvm_report_server* rs = rcd.m_modified_report_message->get_report_server();
 
-  m  = urcd.m_server->compose_message( urcd.m_modified_severity,
-                                  urcd.m_name,
-                                  urcd.m_modified_id,
-                                  urcd.m_modified_message,
-                                  urcd.m_file_name,
-                                  urcd.m_line_number );
-
-  urcd.m_server->process_report( urcd.m_modified_severity,
-                            urcd.m_name,
-                            urcd.m_modified_id,
-                            urcd.m_modified_message,
-                            a, f,
-                            urcd.m_file_name,
-                            urcd.m_line_number,
-                            m, urcd.m_modified_verbosity,
-                            urcd.m_client );
+  if(rcd.m_modified_report_message->get_action() != UVM_NO_ACTION)
+  {
+    // no need to compose when neither UVM_DISPLAY nor UVM_LOG is set
+    if (rcd.m_modified_report_message->get_action() & (UVM_LOG|UVM_DISPLAY))
+      composed_message = rs->compose_report_message(rcd.m_modified_report_message);
+    rs->execute_report_message(rcd.m_modified_report_message, composed_message);
+  }
 }
 
 
@@ -531,108 +570,93 @@ void uvm_report_catcher::issue()
 //! Method called by report_server.report to process catchers
 //------------------------------------------------------------------------------
 
-int uvm_report_catcher::process_all_report_catchers( uvm_report_server* server,
-                                                     uvm_report_object*& client,
-                                                     uvm_severity& severity,
-                                                     const std::string& name,
-                                                     std::string& id,
-                                                     std::string& message,
-                                                     int& verbosity_level,
-                                                     uvm_action& action,
-                                                     const std::string& filename,
-                                                     const int& line )
+bool uvm_report_catcher::process_all_report_catchers( uvm_report_message* rm )
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
+  uvm_report_catcher_data& rcd = uvm_report_catcher_data::get();
   int iter;
   uvm_report_catcher* catcher;
-  int thrown = 1;
+  int thrown = true;
   uvm_severity orig_severity;
   static bool in_catcher;
-
+  uvm_report_object* l_report_object = rm->get_report_object();
 
   if(in_catcher)
-  {
-      return 1;
-  }
+    return true;
+
   in_catcher = true;
   uvm_callbacks_base::m_tracing = false;  //turn off cb tracing so catcher stuff doesn't print
 
-  urcd.m_server             = server;
-  urcd.m_client             = client;
-  orig_severity        = severity;
-  urcd.m_name               = name;
-  urcd.m_file_name          = filename;
-  urcd.m_line_number        = line;
-  urcd.m_modified_id        = id;
-  urcd.m_modified_severity  = severity;
-  urcd.m_modified_message   = message;
-  urcd.m_modified_verbosity = verbosity_level;
-  urcd.m_modified_action    = action;
+  orig_severity = rm->get_severity();
+  rcd.m_modified_report_message = rm;
 
-  urcd.m_orig_severity  = severity;
-  urcd.m_orig_id        = id;
-  urcd.m_orig_verbosity = verbosity_level;
-  urcd.m_orig_action    = action;
-  urcd.m_orig_message   = message;
+  catcher = uvm_report_cb::get_first(iter, l_report_object);
+  if (catcher != NULL)
+  {
+    if(rcd.m_debug_flags & rcd.DO_NOT_MODIFY)
+    {
+      //process p = process::self(); // Keep random stability
+      //string randstate;
+      //if (p != null)
+      //  randstate = p.get_randstate();
+      rcd.m_orig_report_message = dynamic_cast<uvm_report_message*>(rm->clone()); //have to clone, rm can be extended type
+      //if (p != null)
+      //  p.set_randstate(randstate);
+    }
+  }
 
-  catcher = uvm_report_cb::get_first(iter,client);
   while(catcher != NULL)
   {
     uvm_severity prev_sev;
 
     if (!catcher->callback_mode())
     {
-      catcher = uvm_report_cb::get_next(iter,client);
+      catcher = uvm_report_cb::get_next(iter, l_report_object);
       continue;
     }
 
-    prev_sev = urcd.m_modified_severity;
-    urcd.m_set_action_called = 0;
+    prev_sev = rcd.m_modified_report_message->get_severity();
+    rcd.m_set_action_called = false;
     thrown = catcher->process_report_catcher();
 
     // Set the action to the default action for the new severity
     // if it is still at the default for the previous severity,
     // unless it was explicitly set.
-    if (!urcd.m_set_action_called &&
-        urcd.m_modified_severity != prev_sev &&
-        urcd.m_modified_action == urcd.m_client->get_report_action(prev_sev, "*@&*^*^*#"))
+    if (!rcd.m_set_action_called &&
+         rcd.m_modified_report_message->get_severity() != prev_sev &&
+         rcd.m_modified_report_message->get_action() ==
+           l_report_object->get_report_action(prev_sev, "*@&*^*^*#"))
     {
-       urcd.m_modified_action = urcd.m_client->get_report_action(urcd.m_modified_severity, "*@&*^*^*#");
+      rcd.m_modified_report_message->set_action(
+          l_report_object->get_report_action(rcd.m_modified_report_message->get_severity(), "*@&*^*^*#"));
     }
 
-    if(thrown == 0)
+    if(thrown == false)
     {
       switch(orig_severity)
       {
-        case UVM_FATAL:   urcd.m_caught_fatal++; break;
-        case UVM_ERROR:   urcd.m_caught_error++; break;
-        case UVM_WARNING: urcd.m_caught_warning++; break;
+        case UVM_FATAL:   rcd.m_caught_fatal++; break;
+        case UVM_ERROR:   rcd.m_caught_error++; break;
+        case UVM_WARNING: rcd.m_caught_warning++; break;
         case UVM_INFO: break; // skip UVM_INFO
         default: break; // do nothing
       }
       break;
     } // if
-    catcher = uvm_report_cb::get_next(iter,client);
+    catcher = uvm_report_cb::get_next(iter, l_report_object);
   } //while
 
   //update counters if message was returned with demoted severity
   switch(orig_severity)
   {
-    case UVM_FATAL: if(urcd.m_modified_severity < orig_severity) urcd.m_demoted_fatal++; break;
-    case UVM_ERROR: if(urcd.m_modified_severity < orig_severity) urcd.m_demoted_error++; break;
-    case UVM_WARNING: if(urcd.m_modified_severity < orig_severity) urcd.m_demoted_warning++; break;
+    case UVM_FATAL: if(rcd.m_modified_report_message->get_severity() < orig_severity) rcd.m_demoted_fatal++; break;
+    case UVM_ERROR: if(rcd.m_modified_report_message->get_severity() < orig_severity) rcd.m_demoted_error++; break;
+    case UVM_WARNING: if(rcd.m_modified_report_message->get_severity() < orig_severity) rcd.m_demoted_warning++; break;
     case UVM_INFO: break; // nothing to do for UVM_INFO
     default: break;
   }
 
   in_catcher = false;
   uvm_callbacks_base::m_tracing = true;  // turn tracing stuff back on
-
-  severity        = urcd.m_modified_severity;
-  id              = urcd.m_modified_id;
-  message         = urcd.m_modified_message;
-  verbosity_level = urcd.m_modified_verbosity;
-  action          = urcd.m_modified_action;
 
   return thrown;
 }
@@ -646,101 +670,117 @@ int uvm_report_catcher::process_all_report_catchers( uvm_report_server* server,
 
 int uvm_report_catcher::process_report_catcher()
 {
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
+  uvm_report_catcher_data& rcd = uvm_report_catcher_data::get();
   action_e act;
 
   act = do_catch(); // was catch in UVM-SV, but is reserved keyword in C++
 
   if(act == UNKNOWN_ACTION)
   {
-    uvm_report_error("RPTCTHR",
-                     "uvm_report_this.catch() in catcher instance " + get_name() +
-                     " must return THROW or CAUGHT",
-                     UVM_NONE, UVM_FILE_M, UVM_LINE_M );
+    this->uvm_report_error("RPTCTHR",
+                           "uvm_report_this.catch() in catcher instance " + get_name() +
+                           " must return THROW or CAUGHT",
+                           UVM_NONE, UVM_FILE_M, UVM_LINE_M );
   }
 
-  if(urcd.m_debug_flags & urcd.DO_NOT_MODIFY)
-  {
-    urcd.m_modified_severity    = urcd.m_orig_severity;
-    urcd.m_modified_id          = urcd.m_orig_id;
-    urcd.m_modified_verbosity   = urcd.m_orig_verbosity;
-    urcd.m_modified_action      = urcd.m_orig_action;
-    urcd.m_modified_message     = urcd.m_orig_message;
-  }
+  if(rcd.m_debug_flags & rcd.DO_NOT_MODIFY)
+    uvm_report_catcher_data::get().m_modified_report_message->copy(*rcd.m_orig_report_message);
 
-  if(act == CAUGHT  && !(urcd.m_debug_flags & urcd.DO_NOT_CATCH))
+
+  if(act == CAUGHT  && !(rcd.m_debug_flags & rcd.DO_NOT_CATCH))
     return 0;
 
   return 1;
 }
 
-//------------------------------------------------------------------------------
-// member function: f_display (static)
-//
-//! Internal method to check if file is open
-//------------------------------------------------------------------------------
-
-void uvm_report_catcher::f_display( UVM_FILE file, const std::string& str )
-{
-  if (file == 0)
-    std::cout << str << std::endl;
-  else
-    *file << str << std::endl;
-}
 
 //------------------------------------------------------------------------------
-// member function: summarize_report_catcher (static)
+// member function: summarize (static)
 //
 //! This function is called automatically by uvm_report_server::summarize().
 //! It prints the statistics for the active catchers.
 //------------------------------------------------------------------------------
 
-void uvm_report_catcher::summarize_report_catcher( UVM_FILE file )
+void uvm_report_catcher::summarize()
 {
   std::ostringstream s;
-  uvm_report_catcher_data& urcd = uvm_report_catcher_data::get();
+  std::vector<std::string> q;
+  uvm_report_catcher_data& rcd = uvm_report_catcher_data::get();
 
-  if(urcd.do_report)
+  if(rcd.do_report)
   {
-    f_display(file, "");
-    f_display(file, "--- UVM Report catcher Summary ---");
-    f_display(file, "");
+    q.push_back("\n--- UVM Report catcher Summary ---\n\n\n");
 
     s.clear(); s.str("");
     s << "Number of demoted UVM_FATAL reports  :"
       << std::setw(5)
-      << urcd.m_demoted_fatal;
-    f_display(file,s.str());
+      << rcd.m_demoted_fatal
+      << "\n";
+    q.push_back(s.str());
 
     s.clear(); s.str("");
     s << "Number of demoted UVM_ERROR reports  :"
       << std::setw(5)
-      << urcd.m_demoted_error;
-    f_display(file,s.str());
+      << rcd.m_demoted_error
+      << "\n";
+    q.push_back(s.str());
 
     s.clear(); s.str("");
     s << "Number of demoted UVM_WARNING reports:"
       << std::setw(5)
-      << urcd.m_demoted_warning;
-    f_display(file,s.str());
+      << rcd.m_demoted_warning
+      << "\n";
+    q.push_back(s.str());
 
     s.clear(); s.str("");
     s << "Number of caught UVM_FATAL reports   :"
       << std::setw(5)
-      << urcd.m_caught_fatal;
-    f_display(file,s.str());
+      << rcd.m_caught_fatal
+      << "\n";
+    q.push_back(s.str());
 
     s.clear(); s.str("");
     s << "Number of caught UVM_ERROR reports   :"
       << std::setw(5)
-      << urcd.m_caught_error;
-    f_display(file,s.str());
+      << rcd.m_caught_error
+      << "\n";
+    q.push_back(s.str());
 
     s.clear(); s.str("");
     s << "Number of caught UVM_WARNING reports :"
       << std::setw(5)
-      << urcd.m_caught_warning;
-    f_display(file,s.str());
+      << rcd.m_caught_warning
+      << "\n";
+    q.push_back(s.str());
+
+    uvm_coreservice_t* cs = uvm_coreservice_t::get();
+    uvm_root* top = cs->get_root();
+
+    UVM_INFO_CONTEXT("UVM/REPORT/CATCHER", UVM_STRING_QUEUE_STREAMING_PACK(q), UVM_LOW, top );
+  }
+}
+
+void uvm_report_catcher::uvm_process_report_message(uvm_report_message* msg)
+{
+  uvm_report_object* ro = uvm_report_catcher_data::get().m_modified_report_message->get_report_object();
+  uvm_action a = ro->get_report_action(msg->get_severity(), msg->get_id());
+
+  if(a)
+  {
+    std::string composed_message;
+    uvm_report_server* rs = uvm_report_catcher_data::get().m_modified_report_message->get_report_server();
+
+    msg->set_report_object(ro);
+    msg->set_report_handler(uvm_report_catcher_data::get().m_modified_report_message->get_report_handler());
+    msg->set_report_server(rs);
+    msg->set_file(ro->get_report_file_handle(msg->get_severity(), msg->get_id()));
+    msg->set_action(a);
+
+    // no need to compose when neither UVM_DISPLAY nor UVM_LOG is set
+    if (a & (UVM_LOG|UVM_DISPLAY))
+      composed_message = rs->compose_report_message(msg);
+
+    rs->execute_report_message(msg, composed_message);
   }
 }
 

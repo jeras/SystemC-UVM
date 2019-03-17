@@ -31,16 +31,12 @@
 #include "sysc/utils/sc_hash.h"
 
 #include "uvmsc/base/uvm_void.h"
-#include "uvmsc/policy/uvm_comparer.h"
+#include "uvm_object_globals.h"
+
 
 //////////////
 
 namespace uvm {
-
-// instance count
-extern int g_inst_count;
-
-extern uvm_packer* uvm_default_packer;
 
 // forward declaration of uvm_packer used in uvm_object
 class uvm_packer;
@@ -49,6 +45,13 @@ class uvm_status_container;
 class uvm_object_wrapper;
 class uvm_recorder;
 class uvm_comparer;
+
+// instance count
+extern int g_inst_count;
+
+extern uvm_packer* uvm_default_packer;
+extern uvm_comparer* uvm_default_comparer;
+
 
 // TODO typesdefs for intstream, bytestream, etc.
 //typedef vector<int> intstream;
@@ -195,6 +198,7 @@ public:
                                  bool clone = true,
                                  bool recurse = true );
 */
+
   /////////////////////////////////////////////////////
   // Implementation-defined member functions below,
   // not part of UVM Class reference / LRM
@@ -226,6 +230,8 @@ public:
 
  protected:
   std::string m_leaf_name;
+  std::string m_full_name;
+
   int m_inst_id;
 };
 

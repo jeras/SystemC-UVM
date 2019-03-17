@@ -129,9 +129,8 @@ class uvm_comparer
   void print_msg_object( const uvm_object& lhs,
                          const uvm_object& rhs) const;
 
+ public:
   static uvm_comparer* init();
-
-  static uvm_comparer* uvm_default_comparer;
 
   //--------------------------------------
   // Public Data members according to LRM

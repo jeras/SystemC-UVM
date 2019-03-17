@@ -27,11 +27,13 @@
 
 #include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_component_name.h"
+#include "uvmsc/factory/uvm_object_wrapper.h"
 #include "uvmsc/seq/uvm_sequencer_base.h"
 #include "uvmsc/seq/uvm_sequencer.h"
 #include "uvmsc/seq/uvm_sequence_base.h"
 #include "uvmsc/seq/uvm_sequence_item.h"
 #include "uvmsc/conf/uvm_config_db.h"
+#include "uvmsc/print/uvm_printer.h"
 
 namespace uvm {
 
@@ -185,7 +187,9 @@ void uvm_sequencer_base::start_phase_sequence( uvm_phase& phase )
 {
   uvm_object_wrapper* wrapper = NULL;
   uvm_sequence_base* seq = NULL;
-  uvm_factory* f = uvm_factory::get();
+
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* f = cs->get_factory();
 
   // default sequence instance?
   if (!uvm_config_db<uvm_sequence_base*>::get(
@@ -245,13 +249,8 @@ void uvm_sequencer_base::start_phase_sequence( uvm_phase& phase )
   }
   */
 
-  //fork
-  //{
-    //reseed this process for random stability
-    //process proc = process::self();
-    //proc.srandom(uvm_create_random_seed(seq.get_type_name(), this.get_full_name()));
-    seq->start(this, NULL);
-  //}
+  // launch default sequence as new process
+  sc_core::sc_spawn(sc_bind(&uvm_sequencer_base::m_start_default_seq_proc, this, seq));
 
 }
 
@@ -1293,5 +1292,16 @@ void uvm_sequencer_base::m_unlock_req( uvm_sequence_base* sequence_ptr )
   uvm_report_warning("SQRUNL", str.str(), UVM_NONE);
 }
 
+//----------------------------------------------------------------------
+// member function: m_start_default_seq_proc
+//
+// Implementation defined
+// Start default sequence as forked process
+//----------------------------------------------------------------------
+
+void uvm_sequencer_base::m_start_default_seq_proc(uvm_sequence_base* seq)
+{
+  seq->start(this, NULL);
+}
 
 } /* namespace uvm */

@@ -23,12 +23,7 @@
 #ifndef UVM_OBJECT_WRAPPER_H_
 #define UVM_OBJECT_WRAPPER_H_
 
-#include <map>
-#include <list>
 #include <string>
-#include <iostream>
-
-#include "uvmsc/report/uvm_report_object.h"
 
 //////////////////////
 
@@ -50,7 +45,7 @@ class uvm_component;
 //! request to the appropriate proxy.
 //----------------------------------------------------------------------------
 
-class uvm_object_wrapper : public uvm_report_object
+class uvm_object_wrapper
 {
  public:
 
@@ -100,7 +95,7 @@ class uvm_object_wrapper : public uvm_report_object
   virtual ~uvm_object_wrapper() {}
 
  protected:
-   uvm_object_wrapper( const std::string& name = "") : uvm_report_object(name) {}
+   uvm_object_wrapper( const std::string& name = "" ) {}
 
 };
 

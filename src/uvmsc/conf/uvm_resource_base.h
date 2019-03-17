@@ -23,6 +23,10 @@
 #ifndef UVM_RESOURCE_BASE_H_
 #define UVM_RESOURCE_BASE_H_
 
+#include <systemc>
+#include <map>
+#include <string>
+
 #include "uvmsc/conf/uvm_resource_types.h"
 
 namespace uvm {
@@ -51,7 +55,7 @@ public:
   //--------------------------------------------------------------------------
 
   uvm_resource_base( const std::string& name = "",
-		  	  	         const std::string& s = "*" );
+                     const std::string& s = "*" );
 
   ~uvm_resource_base();
 

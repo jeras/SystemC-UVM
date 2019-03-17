@@ -157,8 +157,6 @@ class uvm_objection : public uvm_object
 
   static m_objections_list& m_objections();
 
-  static m_event& m_objections_ev();
-
   void m_raise( uvm_object* obj,
                 uvm_object* source_obj,
                 const std::string& description = "",

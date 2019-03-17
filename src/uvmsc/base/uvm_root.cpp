@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------
-//   Copyright 2012-2015 NXP B.V.
-//   Copyright 2014 Fraunhofer-Gesellschaft zur Foerderung
+//   Copyright 2012-2016 NXP B.V.
+//   Copyright 2014-2017 Fraunhofer-Gesellschaft zur Foerderung
 //					der angewandten Forschung e.V.
 //   Copyright 2007-2011 Mentor Graphics Corporation
 //   Copyright 2007-2011 Cadence Design Systems, Inc.
@@ -26,8 +26,11 @@
 #include <stdexcept>
 
 #include "uvmsc/base/uvm_root.h"
+#include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_component_name.h"
 #include "uvmsc/base/uvm_globals.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 #include "uvmsc/macros/uvm_message_defines.h"
 #include "uvmsc/phasing/uvm_phase.h"
 #include "uvmsc/phasing/uvm_common_phases.h"
@@ -36,9 +39,8 @@
 #include "uvmsc/print/uvm_printer.h"
 #include "uvmsc/print/uvm_table_printer.h"
 #include "uvmsc/print/uvm_printer_globals.h"
-#include "uvmsc/report/uvm_root_report_handler.h"
+#include "uvmsc/report/uvm_report_handler.h"
 #include "uvmsc/report/uvm_report_server.h"
-#include "uvmsc/report/uvm_report_catcher.h"
 #include "uvmsc/conf/uvm_resource_pool.h"
 
 using namespace sc_core;
@@ -63,7 +65,7 @@ namespace uvm {
 // Initialization static data members
 //----------------------------------------------------------------------
 
-uvm_root* uvm_root::m_root = NULL;
+
 bool uvm_root::m_uvm_timeout_overridable = true;
 
 //----------------------------------------------------------------------
@@ -81,18 +83,16 @@ uvm_root::uvm_root( uvm_component_name nm )
 
   m_uvm_timeout_overridable = true;
 
-  uvm_top = const_cast<uvm_root*>(m_root);
-
-  m_rh = new uvm_root_report_handler();
-  set_report_handler(m_rh);
+  m_rh->set_name("reporter");
 
   phases_registered = false;
 
   // create resource pool
   uvm_resource_pool::get();
 
-  // create factory
-  uvm_factory::get();
+  // Launch factory service
+  //uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  //cs->get_factory();
 
   // print header
   m_uvm_header();
@@ -104,14 +104,8 @@ uvm_root::uvm_root( uvm_component_name nm )
 
 uvm_root::~uvm_root()
 {
-  // clean memory
-  delete m_rh;
-
   // delete resource pool
   uvm_resource_pool::cleanup();
-
-  // delete factory
-  uvm_factory::cleanup();
 }
 
 //----------------------------------------------------------------------
@@ -126,7 +120,8 @@ uvm_root::~uvm_root()
 
 void uvm_root::run_test( const std::string& test_name )
 {
-  //disable SystemC messages
+  // disable SystemC messages
+  // TODO make switch available to enable SystemC messages
   sc_core::sc_report_handler::set_actions("/OSCI/SystemC", sc_core::SC_DO_NOTHING);
 
   // check and register test object
@@ -155,9 +150,9 @@ void uvm_root::run_test( const std::string& test_name )
     exit(1); // TODO exit program with error code?
   }
 
-  // TODO: move post-run phases to here? Currently they are part of the simulation
-
-  if (m_finish_on_completion)
+  // Stop simulation when phasing is completed and finish_on_completion is set
+  if ( m_finish_on_completion && (sc_core::sc_get_status() == sc_core::SC_RUNNING ||
+      sc_core::sc_get_status() == sc_core::SC_PAUSED) )
     sc_core::sc_stop();
 }
 
@@ -180,7 +175,7 @@ void uvm_root::die()
   // do the pre_abort callbacks
   m_do_pre_abort();
 
-  l_rs->summarize();
+  l_rs->report_summarize();
   throw std::runtime_error("Simulation terminated by uvm_root::die()");
 }
 
@@ -217,22 +212,37 @@ void uvm_root::set_timeout( const sc_core::sc_time& timeout, bool overridable)
 }
 
 //----------------------------------------------------------------------
-// member function: finish_on_completion
+// member function: set_finish_on_completion
 //
-//! The member function finish_on_completion shall define how simulation
-//! is finalized. If enabled, it shall execute all end_of_simulation
-//! callbacks of the UVM components involved. If disabled, simulation is
-//! finalized without calling these end_of_simulation callbacks. By default,
-//! the end_of_simulation callbacks are not executed, unless enabled by the
-//! application by calling this member function.
+//! The member function set_finish_on_completion shall define how
+//! simulation is finalized. If the application did not call this member
+//! function or if the argument enable is set to true, it shall execute
+//! all end_of_simulation callbacks of the UVM components involved and
+//! finish the simulation. If the argument enable is set to false, the
+//! simulation shall be finalized without calling the end_of_simulation
+//! callbacks.
 //! NOTE: An implementation may call the function sc_core::sc_stop as part
 //! of the finish_on_completion implementation to enforce finalization of
 //! the simulation following the SystemC execution semantics.
 //----------------------------------------------------------------------
 
-void uvm_root::finish_on_completion( bool enable  )
+void uvm_root::set_finish_on_completion( bool enable )
 {
   m_finish_on_completion = enable;
+}
+
+//----------------------------------------------------------------------
+// member function: get_finish_on_completion
+//
+//! The member function get_finish_on_completion shall return true if the
+//! application has not called member function set_finish_on_completion
+//! or if the member function was called with the argument enable as true;
+//! otherwise it shall return false.
+//----------------------------------------------------------------------
+
+bool uvm_root::get_finish_on_completion()
+{
+  return m_finish_on_completion;
 }
 
 //----------------------------------------------------------------------
@@ -312,9 +322,7 @@ void uvm_root::print_topology( uvm_printer* printer )
   if (printer == NULL)
     uvm_report_error("NULLPRINTER", "uvm_default_printer is NULL");
 
-  uvm_report_info("UVMTOP", "UVM testbench topology:", UVM_LOW);
-
-  if (m_children.size()==0)
+  if (m_children.size() == 0)
   {
     uvm_report_warning("EMTCOMP", "print_topology - No UVM components to print.", UVM_NONE);
     return;
@@ -327,7 +335,8 @@ void uvm_root::print_topology( uvm_printer* printer )
     if(it->second->print_enabled)
       printer->print_object("", *(it->second));
   }
-  std::cout << printer->emit() << std::endl;
+
+  UVM_INFO("UVMTOP", "UVM testbench topology:\n" + printer->emit(), UVM_NONE);
 }
 
 //----------------------------------------------------------------------
@@ -399,6 +408,26 @@ void uvm_root::end_of_simulation()
 }
 
 //----------------------------------------------------------------------
+// member function: m_uvm_get_root (static)
+//
+//! Implementation defined
+//! Get the initialized singleton instance of uvm_root
+//----------------------------------------------------------------------
+
+uvm_root* uvm_root::m_uvm_get_root()
+{
+  static uvm_root* m_root = NULL;
+
+  if (m_root == NULL)
+  {
+    m_root = new uvm_root(sc_core::sc_module_name("uvm_top"));
+    m_root->m_domain = uvm_domain::get_uvm_domain();
+  }
+
+  return m_root;
+}
+
+//----------------------------------------------------------------------
 // member function: get (static)
 //
 //! Implementation defined
@@ -407,13 +436,8 @@ void uvm_root::end_of_simulation()
 
 uvm_root* uvm_root::get()
 {
-  if (m_root == NULL)
-  {
-    sc_core::sc_module_name name("uvm_top");
-    m_root = new uvm_root(name);
-    m_root->m_domain = uvm_domain::get_uvm_domain();
-  }
-  return m_root;
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  return cs->get_root();
 }
 
 //----------------------------------------------------------------------
@@ -465,7 +489,10 @@ void uvm_root::m_register_test( const std::string& test_name )
 
   if ( (comp_list.size() == 0) && (test_name.size() != 0) )
   {
-    uvm_test_top = uvm_factory::get()->create_component_by_name(
+    uvm_coreservice_t* cs = uvm_coreservice_t::get();
+    uvm_factory* factory = cs->get_factory();
+
+    uvm_test_top = factory->create_component_by_name(
       test_name, "", test_name, NULL);
 
     if (uvm_test_top == NULL)
@@ -521,7 +548,7 @@ void uvm_root::m_uvm_header()
         << std::endl
         << "              Version: " << UVM_VERSION << "  Date: " << UVM_RELEASE_DATE << std::endl;
     std::cerr
-        << "          Copyright (c) 2006 - 2015 by all Contributors" << std::endl
+        << "          Copyright (c) 2006 - 2017 by all Contributors" << std::endl
         << "            See NOTICE file for all Contributors"  << std::endl
         << "                    ALL RIGHTS RESERVED" << std::endl;
     std::cerr

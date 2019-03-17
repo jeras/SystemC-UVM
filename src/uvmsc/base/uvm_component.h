@@ -25,15 +25,10 @@
 
 #include <iostream>
 #include <map>
+#include <list>
 
 #include "sysc/kernel/sc_module.h"
 #include "sysc/kernel/sc_process_handle.h"
-
-#include "uvmsc/base/uvm_object_globals.h"
-#include "uvmsc/base/uvm_transaction.h"
-#include "uvmsc/factory/uvm_factory.h"
-#include "uvmsc/phasing/uvm_domain.h"
-#include "uvmsc/phasing/uvm_phase.h"
 #include "uvmsc/report/uvm_report_object.h"
 
 
@@ -42,10 +37,14 @@
 namespace uvm {
 
 // forward declaration of necessary classes.
+class uvm_object;
+class uvm_phase;
 class uvm_domain;
 class uvm_transaction;
 class uvm_config_object_wrapper;
 class uvm_component_name;
+class uvm_objection;
+class uvm_coreservice_t;
 
 //------------------------------------------------------------------------------
 // CLASS: uvm_component

@@ -22,6 +22,8 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
+
 #include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_object.h"
 #include "uvmsc/print/uvm_printer.h"
@@ -199,38 +201,18 @@ void uvm_printer::print_real( const std::string& name,
   m_rows.push_back(row_info);
 }
 
-
 //----------------------------------------------------------------------
-// member function: print_real
+// member function: print_double
 //
-//! Prints a double-value field.
+//! Prints a real-value field.
 //----------------------------------------------------------------------
 
-void uvm_printer::print_real( const std::string& name,
-                              float value,
+void uvm_printer::print_double( const std::string& name,
+                              double value,
                               const char* scope_separator ) const
+
 {
-  uvm_printer_row_info row_info;
-
-  if (!name.empty() && name != "...")
-  {
-    m_scope.set_arg(name);
-    //name = m_scope.get(); // no need to return changed name
-  }
-
-  std::ostringstream str_size;
-  str_size << sizeof(value)*CHAR_BIT;
-
-  std::ostringstream str_val;
-  str_val << value;
-
-  row_info.level = m_scope.depth();
-  row_info.name = adjust_name(m_scope.get(), scope_separator);
-  row_info.type_name = "float";
-  row_info.size = str_size.str();
-  row_info.val = str_val.str();
-
-  m_rows.push_back(row_info);
+  print_real(name, value, scope_separator);
 }
 
 //----------------------------------------------------------------------

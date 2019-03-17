@@ -16,6 +16,11 @@
 //   the License for the specific language governing
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
+//
+//   Original Author: Martin Barnasconi, NXP Semiconductors
+//   Created on: 2012-10-27
+//
+//----------------------------------------------------------------------
 
 #ifndef DUT_H_
 #define DUT_H_

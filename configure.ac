@@ -2,7 +2,7 @@
 ## --------------------------------------------------------------------------
 ##
 ##   Copyright 2014 Université Pierre et Marie Curie, Paris
-##   Copyright 2014 Fraunhofer-Gesellschaft zur Foerderung
+##   Copyright 2014-2017 Fraunhofer-Gesellschaft zur Foerderung
 ##                  der angewandten Forschung e.V.
 ##   Copyright 2007-2011 Mentor Graphics Corporation
 ##   Copyright 2007-2011 Cadence Design Systems, Inc.
@@ -30,11 +30,18 @@
 ##   Created on: 2014-03-10
 ##
 ## --------------------------------------------------------------------------
+##
+##   SVN Version       :  $Revision: 510 $
+##   SVN last checkin  :  $Date: 2015-01-08 19:31:34 +0100 (Thu, 08 Jan 2015) $
+##   SVN checkin by    :  $Author: barnasconi $
+##   SVN Id            :  $Id: configure.ac 510 2015-01-08 18:31:34Z barnasconi $
+##
+## --------------------------------------------------------------------------
 
 AC_PREREQ(2.61)
 
 AC_INIT([UVM-SystemC],
-        [1.0-alpha1],
+        [1.0-beta1],
         [uvm-systemc-feedback@lists.accellera.org],
         [uvm-systemc],
         [Download-URL],
@@ -49,7 +56,7 @@ AC_DEFINE_UNQUOTED(CONFIGURE_DATE, "`sh -c date`", [Date of configure])
 AC_SUBST(CONFIGURE_DATE)
 
 AC_DEFINE_UNQUOTED(UVM_VERSION, "${PACKAGE_VERSION}", [UVM SystemC Version])
-AC_DEFINE_UNQUOTED(UVM_RELEASE_DATE, "2015-12-04", [UVM SystemC Release Date])
+AC_DEFINE_UNQUOTED(UVM_RELEASE_DATE, "2017-12-07", [UVM SystemC Release Date])
 AC_SUBST(UVM_VERSION)
 AC_SUBST(UVM_RELEASE_DATE)
 
@@ -267,16 +274,16 @@ AM_CONDITIONAL([WANT_DEBUG], [test "$enable_debug" = "yes"])
 
 
 AC_MSG_CHECKING(whether to enable compiler optimizations)
-AC_ARG_ENABLE([optimized],
-  AS_HELP_STRING([--disable-optimized],
+AC_ARG_ENABLE([optimize],
+  AS_HELP_STRING([--disable-optimize],
                  [disable compiler optimizations]),
   [case "$enableval" in
-    "no" | "yes")  enable_optimized=$enableval;;
-    *)             AC_MSG_ERROR(bad value "$enableval" for --enable-optimized);;
+    "no" | "yes")  enable_optimize=$enableval;;
+    *)             AC_MSG_ERROR(bad value "$enableval" for --enable-optimize);;
   esac],
-  [enable_optimized="yes"])
-AC_MSG_RESULT($enable_optimized)
-AM_CONDITIONAL([WANT_OPTIMIZED], [test "$enable_optimized" = "yes"])
+  [enable_optimize="yes"])
+AC_MSG_RESULT($enable_optimize)
+AM_CONDITIONAL([WANT_OPTIMIZE], [test "$enable_optimize" = "yes"])
 
 AC_SUBST(EXTRA_CXXFLAGS)
 AC_SUBST(DEBUG_CXXFLAGS)
@@ -546,6 +553,8 @@ AC_OUTPUT( Makefile
            src/uvmsc/phasing/Makefile
            src/uvmsc/policy/Makefile
            src/uvmsc/print/Makefile
+           src/uvmsc/reg/Makefile
+           src/uvmsc/reg/sequences/Makefile
            src/uvmsc/report/Makefile
            src/uvmsc/seq/Makefile
            src/uvmsc/tlm1/Makefile
@@ -591,7 +600,7 @@ Configuration summary of $PACKAGE_STRING for $target
    SystemC CFLAGS:      ${SYSTEMC_CFLAGS}
    SystemC LIBS:        ${SYSTEMC_LIBS}
    Additional LIBS:     ${LIBS}
-   Enable compiler optimizations:   $enable_optimized
+   Enable compiler optimizations:   $enable_optimize
    Include debug symbols:           $enable_debug
    Generate instrumentation calls:  $enable_profiling
    Regular expression library:      $want_regex

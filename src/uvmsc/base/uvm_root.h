@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2012-2015 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   Copyright 2007-2011 Mentor Graphics Corporation
 //   Copyright 2007-2011 Cadence Design Systems, Inc.
 //   Copyright 2010-2011 Synopsys, Inc.
@@ -26,15 +26,14 @@
 #include <systemc>
 
 #include "uvmsc/base/uvm_component.h"
-#include "uvmsc/report/uvm_report_object.h"
-#include "uvmsc/base/uvm_object_globals.h"
-#include "uvmsc/print/uvm_printer.h"
+
 
 namespace uvm {
 
 // forward class declarations
-class uvm_root_report_handler;
 class uvm_default_coreservice_t;
+class uvm_component;
+class uvm_component_name;
 
 //----------------------------------------------------------------------
 // Class: uvm_root
@@ -57,6 +56,8 @@ class uvm_root : public uvm_component
 
   static uvm_root* get();
 
+  static uvm_root* m_uvm_get_root();
+
   //--------------------------------------------------------------------
   // Group: Simulation control
   //--------------------------------------------------------------------
@@ -67,7 +68,9 @@ class uvm_root : public uvm_component
 
   void set_timeout( const sc_core::sc_time& timeout, bool overridable = true );
 
-  void finish_on_completion( bool enable = true );
+  void set_finish_on_completion( bool enable );
+
+  bool get_finish_on_completion();
 
   //--------------------------------------------------------------------
   // Group: Topology
@@ -95,6 +98,8 @@ class uvm_root : public uvm_component
 
   ~uvm_root(); // destructor
 
+  sc_core::sc_object* m_hdl_obj; // TODO enable HDL access more elegant
+
  private:
 
   // other data members
@@ -102,8 +107,6 @@ class uvm_root : public uvm_component
   bool m_enable_print_topology; // default set to false
 
   bool m_finish_on_completion; // default set to true
-
-  uvm_root_report_handler* m_rh;
 
   void m_uvm_header();
 
@@ -126,8 +129,6 @@ class uvm_root : public uvm_component
 
 
   // data members
-
-  static uvm_root* m_root;
 
   bool m_phase_all_done;
   bool phases_registered;

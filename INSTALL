@@ -338,7 +338,7 @@ Set the following environment variable(s) under Windows:
      Value   : c:\my\path\to\systemc-2.3.1\msvc80
      
      Variable: UVMSYSTEMC
-     Value   : c:\my\path\to\uvm-systemc-1.0-alpha1\msvc80
+     Value   : c:\my\path\to\uvm-systemc-1.0-beta1\msvc80
 
 
 Microsoft Visual C++ 2005 (compiler version 8.0) or later

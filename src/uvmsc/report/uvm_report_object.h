@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2012 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2011 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -35,6 +35,7 @@ namespace uvm {
 // forward class declarations
 class uvm_report_handler;
 class uvm_report_server;
+class uvm_report_message;
 
 //----------------------------------------------------------------------------
 // CLASS: uvm_report_object
@@ -55,8 +56,6 @@ class uvm_report_object : public uvm_object
 
  protected:
 
-  uvm_report_object();
-
   explicit uvm_report_object( const std::string& name );
 
  public:
@@ -65,33 +64,54 @@ class uvm_report_object : public uvm_object
   // Group: Reporting
   //--------------------------------------------------------------------------
 
-  int uvm_report_enabled( int verbosity,
-                          uvm_severity severity = UVM_INFO,
-                          const std::string& id = "" ) const;
+  uvm_report_object* uvm_get_report_object() const;
+
+  bool uvm_report_enabled( int verbosity,
+                           uvm_severity severity = UVM_INFO,
+                           const std::string& id = "" ) const;
+
+  virtual void uvm_report( uvm_severity severity,
+                           const std::string& id,
+                           const std::string& message,
+                           int verbosity = -1, // changed default to -1 for automatic update
+                           const std::string& filename = "",
+                           int line = 0,
+                           const std::string& context_name = "",
+                           bool report_enabled_checked = false ) const;
 
   virtual void uvm_report_info( const std::string& id,
                                 const std::string& message,
                                 int verbosity = UVM_MEDIUM,
                                 const std::string& filename = "",
-                                int line = 0 ) const;
+                                int line = 0,
+                                const std::string& context_name = "",
+                                bool report_enabled_checked = false ) const;
 
   virtual void uvm_report_warning( const std::string& id,
                                    const std::string& message,
                                    int verbosity = UVM_MEDIUM,
                                    const std::string& filename = "",
-                                   int line = 0 ) const;
+                                   int line = 0,
+                                   const std::string& context_name = "",
+                                   bool report_enabled_checked = false ) const;
 
   virtual void uvm_report_error( const std::string& id,
                                  const std::string& message,
                                  int verbosity = UVM_LOW,
                                  const std::string& filename = "",
-                                 int line = 0 ) const;
+                                 int line = 0,
+                                 const std::string& context_name = "",
+                                 bool report_enabled_checked = false ) const;
 
   virtual void uvm_report_fatal( const std::string& id,
                                  const std::string& message,
                                  int verbosity = UVM_NONE,
                                  const std::string& filename = "",
-                                 int line = 0 ) const;
+                                 int line = 0,
+                                 const std::string& context_name = "",
+                                 bool report_enabled_checked = false ) const;
+
+  void uvm_process_report_message( uvm_report_message* report_message ) const;
 
   //--------------------------------------------------------------------------
   // Group: Verbosity Configuration
@@ -100,8 +120,7 @@ class uvm_report_object : public uvm_object
   int get_report_verbosity_level( uvm_severity severity = UVM_INFO,
                                   const std::string& id = "" ) const;
 
-  // TODO
-  // int get_report_max_verbosity_level() const;
+  int get_report_max_verbosity_level() const;
 
   void set_report_verbosity_level( int verbosity_level );
 
@@ -164,6 +183,7 @@ class uvm_report_object : public uvm_object
 
   void reset_report_handler();
 
+
   /////////////////////////////////////////////////////
   /////////////////////////////////////////////////////
   // Implementation-defined member functions below,
@@ -171,59 +191,14 @@ class uvm_report_object : public uvm_object
   /////////////////////////////////////////////////////
   /////////////////////////////////////////////////////
 
-  // Callbacks deprecated in UVM 1.2 - will be removed soon
-
-  virtual bool report_info_hook( const std::string& id,
-                                 const std::string& message,
-                                 int verbosity,
-                                 const std::string& filename,
-                                 int line ) const;
-
-  virtual bool report_error_hook( const std::string& id,
-                                  const std::string& message,
-                                  int verbosity,
-                                  const std::string& filename,
-                                  int line ) const;
-
-  virtual bool report_warning_hook( const std::string& id,
-                                    const std::string& message,
-                                    int verbosity,
-                                    const std::string& filename,
-                                    int line ) const;
-
-  virtual bool report_fatal_hook( const std::string& id,
-                                  const std::string& message,
-                                  int verbosity,
-                                  const std::string& filename,
-                                  int line ) const;
-
-  virtual bool report_hook( const std::string& id,
-                            const std::string& message,
-                            int verbosity,
-                            const std::string& filename,
-                            int line ) const;
-
-  int uvm_get_max_verbosity() const;
-
-  void m_init();
-
-  static uvm_report_object* get();
-
   virtual ~uvm_report_object();
 
- private:
-  static uvm_report_object* m_inst;
+  void start_report_handler(const std::string& name);
 
+ protected:
   uvm_report_handler* m_rh;
 };
 
-
-// global entry point to get a handle to the report object
-inline
-uvm_report_object* get_report_object()
-{
-  return uvm_report_object::get();
-}
 
 } // namespace uvm
 

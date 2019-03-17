@@ -23,14 +23,10 @@
 #ifndef UVM_FACTORY_H_
 #define UVM_FACTORY_H_
 
-#include <map>
-#include <list>
 #include <string>
-#include <iostream>
 
-#include "uvmsc/base/uvm_object.h"
-#include "uvmsc/factory/uvm_object_wrapper.h"
-#include "uvmsc/report/uvm_report_object.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 
 
 //////////////////////
@@ -38,49 +34,14 @@
 namespace uvm {
 
 
-// forward declarations
+// forward class declarations
 class uvm_object;
 class uvm_component;
-
-
-//----------------------------------------------------------------------------
-// CLASS: uvm_factory_override
-//
-// Internal class
-//----------------------------------------------------------------------------
-
-class uvm_factory_override: public uvm_report_object
-{
- public:
-  uvm_factory_override( const std::string& full_inst_path_ = "",
-		  std::string orig_type_name_ = "",
-                        uvm_object_wrapper* orig_type_ = NULL,
-                        uvm_object_wrapper* ovrd_type_ = NULL )
-  {
-    if (ovrd_type_ == NULL)
-      uvm_report_fatal( "NULLWR",
-                        "Attempting to register a NULL override object with the factory",
-                        UVM_NONE);
-
-    full_inst_path = full_inst_path_;
-    orig_type_name = (orig_type_ == NULL) ? orig_type_name_ : (orig_type_->get_type_name() );
-    orig_type      = orig_type_;
-    ovrd_type_name = ovrd_type_->get_type_name();
-    ovrd_type      = ovrd_type_;
-  }
-
- public: //data members
-  std::string full_inst_path;
-  std::string orig_type_name;
-  std::string ovrd_type_name;
-  bool selected;
-  uvm_object_wrapper* orig_type;
-  uvm_object_wrapper* ovrd_type;
-};
-
+class uvm_object_wrapper;
+class uvm_factory_override;
 
 //----------------------------------------------------------------------------
-// CLASS: uvm_factory
+// Class: uvm_factory
 //
 //! As the name implies, uvm_factory is used to manufacture (create) UVM objects
 //! and components. Only one instance of the factory is present in a given
@@ -100,174 +61,102 @@ class uvm_factory_override: public uvm_report_object
 //!   Errors in name-based requests might only be caught at the time of the call,
 //!   if at all. Further, the name-based interface is not portable across
 //!   simulators when used with parameterized classes.
+//!
+//! The uvm_factory is an abstract class which declares many of its methods
+//! as pure virtual. The UVM uses the uvm_default_factory class
+//! as its default factory implementation.
 //----------------------------------------------------------------------------
 
-class uvm_factory : public uvm_report_object
+class uvm_factory
 {
-  friend class uvm_root;
-  friend class uvm_object;
-  friend class uvm_object_wrapper;
-  friend class uvm_default_coreservice_t;
+ public:
 
-public:
-
-  static uvm_factory* get();
+  static uvm_factory* get()
+  {
+    uvm_coreservice_t* s;
+    s = uvm_coreservice_t::get();
+    return s->get_factory();
+  }
 
   //--------------------------------------------------------------------------
   // Group: Registering Types
   //--------------------------------------------------------------------------
 
-  void do_register( uvm_object_wrapper* obj );
+  virtual void do_register( uvm_object_wrapper* obj ) = 0;
 
   //--------------------------------------------------------------------------
   // Group: Type & Instance Overrides
   //--------------------------------------------------------------------------
 
-  void set_inst_override_by_type( uvm_object_wrapper* original_type,
-                                  uvm_object_wrapper* override_type,
-                                  const std::string& full_inst_path );
+  virtual void set_inst_override_by_type( uvm_object_wrapper* original_type,
+                                          uvm_object_wrapper* override_type,
+                                          const std::string& full_inst_path ) = 0;
 
-  void set_inst_override_by_name( const std::string& original_type_name,
-                                  const std::string& override_type_name,
-                                  const std::string& full_inst_path );
+  virtual void set_inst_override_by_name( const std::string& original_type_name,
+                                          const std::string& override_type_name,
+                                          const std::string& full_inst_path ) = 0;
 
-  void set_type_override_by_type( uvm_object_wrapper* original_type,
-                                  uvm_object_wrapper* override_type,
-                                  bool replace = true );
+  virtual void set_type_override_by_type( uvm_object_wrapper* original_type,
+                                          uvm_object_wrapper* override_type,
+                                          bool replace = true ) = 0;
 
-  void set_type_override_by_name( const std::string& original_type_name,
-                                  const std::string& override_type_name,
-                                  bool replace = true );
+  virtual void set_type_override_by_name( const std::string& original_type_name,
+                                          const std::string& override_type_name,
+                                          bool replace = true ) = 0;
 
   //--------------------------------------------------------------------------
   // Group: Creation
   //--------------------------------------------------------------------------
 
-  uvm_object* create_object_by_type( uvm_object_wrapper* requested_type,
-                                     const std::string& parent_inst_path = "",
-                                     const std::string& name = "" );
+  virtual uvm_object* create_object_by_type( uvm_object_wrapper* requested_type,
+                                             const std::string& parent_inst_path = "",
+                                             const std::string& name = "" ) = 0;
 
-  uvm_component* create_component_by_type( uvm_object_wrapper* requested_type,
-                                           const std::string& parent_inst_path = "",
-                                           const std::string& name = "",
-                                           uvm_component* parent = NULL );
+  virtual uvm_component* create_component_by_type( uvm_object_wrapper* requested_type,
+                                                   const std::string& parent_inst_path = "",
+                                                   const std::string& name = "",
+                                                   uvm_component* parent = NULL ) = 0;
 
-  uvm_object* create_object_by_name( const std::string& requested_type_name,
-                                     const std::string& parent_inst_path = "",
-                                     const std::string& name = "" );
+  virtual uvm_object* create_object_by_name( const std::string& requested_type_name,
+                                             const std::string& parent_inst_path = "",
+                                             const std::string& name = "" ) = 0;
 
-  uvm_component* create_component_by_name( const std::string& requested_type_name,
-                                           const std::string& parent_inst_path = "",
-                                           const std::string& name = "",
-                                           uvm_component* parent = NULL );
+  virtual uvm_component* create_component_by_name( const std::string& requested_type_name,
+                                                   const std::string& parent_inst_path = "",
+                                                   const std::string& name = "",
+                                                   uvm_component* parent = NULL ) = 0;
+
+  virtual bool is_type_name_registered( const std::string& type_name ) const = 0;
+
+  virtual bool is_type_registered( uvm_object_wrapper* obj ) const = 0 ;
 
   //--------------------------------------------------------------------------
   // Group: Debug
   //--------------------------------------------------------------------------
 
-  void debug_create_by_type( uvm_object_wrapper* requested_type,
-                             const std::string& parent_inst_path = "",
-                             const std::string& name = "" );
+  virtual void debug_create_by_type( uvm_object_wrapper* requested_type,
+                                     const std::string& parent_inst_path = "",
+                                     const std::string& name = "" ) = 0;
 
-  void debug_create_by_name( const std::string& requested_type_name,
-                             const std::string& parent_inst_path = "",
-                             const std::string& name = "" );
+  virtual void debug_create_by_name( const std::string& requested_type_name,
+                                     const std::string& parent_inst_path = "",
+                                     const std::string& name = "" ) = 0;
 
-  uvm_object_wrapper* find_override_by_type( uvm_object_wrapper* requested_type,
-                                             const std::string& full_inst_path );
+  virtual uvm_object_wrapper* find_override_by_type( uvm_object_wrapper* requested_type,
+                                                     const std::string& full_inst_path ) = 0;
 
-  uvm_object_wrapper* find_override_by_name( const std::string& requested_type_name,
-                                             const std::string& full_inst_path );
+  virtual uvm_object_wrapper* find_override_by_name( const std::string& requested_type_name,
+                                                     const std::string& full_inst_path ) = 0;
 
-  void print ( int all_types = 1 );
+  virtual uvm_object_wrapper* find_wrapper_by_name( const std::string& type_name ) = 0;
 
-  /////////////////////////////////////////////////////
-  // Implementation-defined member functions below,
-  // not part of UVM Class reference / LRM
-  /////////////////////////////////////////////////////
+  virtual void print( int all_types = 1 ) = 0;
 
  protected:
-  uvm_factory();
+  uvm_factory(){};
+  virtual ~uvm_factory(){};
 
-  virtual ~uvm_factory();
-
-  bool check_inst_override_exists( uvm_object_wrapper* original_type,
-                                   uvm_object_wrapper* override_type,
-                                   const std::string& full_inst_path );
-
-  bool m_has_wildcard( const std::string& nm );
-
-  void m_debug_create( const std::string& requested_type_name,
-                       uvm_object_wrapper* requested_type,
-                       const std::string& parent_inst_path,
-                       const std::string& name );
-
-  void m_debug_display( const std::string& requested_type_name,
-                        uvm_object_wrapper* result,
-                        const std::string& full_inst_path );
-
-  uvm_object_wrapper* find_by_name( const std::string& type_name );
-
- private:
-
-  static void cleanup();
-
- protected:
-
-  // data members
-
-  static uvm_factory* m_inst;
-
-  typedef std::map<uvm_object_wrapper*, bool> m_types_mapT;
-  typedef m_types_mapT::iterator m_types_mapItT;
-
-  typedef std::map<std::string, uvm_object_wrapper*> m_type_names_mapT;
-  typedef m_type_names_mapT::iterator m_type_names_mapItT;
-
-  typedef std::list<uvm_factory_override*> m_overrides_listT;
-  typedef m_overrides_listT::iterator m_overrides_listItT;
-  typedef std::map< std::string, bool > m_lookup_strs_mapT;
-
-  struct uvm_factory_queue_class
-  {
-    m_overrides_listT queue;
-  };
-
-  m_types_mapT       m_types;
-  m_type_names_mapT  m_type_names;
-  m_lookup_strs_mapT m_lookup_strs;
-  m_overrides_listT  m_type_overrides;
-  m_overrides_listT  m_wildcard_inst_overrides;
-
-  typedef std::map<uvm_object_wrapper*, uvm_factory_queue_class*>
-            m_inst_override_queues_mapT;
-  typedef m_inst_override_queues_mapT::iterator
-            m_inst_override_queues_mapItT;
-  typedef std::map<std::string, uvm_factory_queue_class*>
-            m_inst_override_name_queues_mapT;
-  typedef m_inst_override_name_queues_mapT::iterator
-            m_inst_override_name_queues_mapItT;
-
-  m_inst_override_queues_mapT  m_inst_override_queues;
-  m_inst_override_name_queues_mapT m_inst_override_name_queues;
-
- private:
-  m_overrides_listT m_override_info;
-
-  static bool m_debug_pass;
-};
-
-//-----------------------------------------------------------------------------
-// singleton factory; it is statically initialized
-//
-// global entry point to get a handle to the factory
-//-----------------------------------------------------------------------------
-
-inline
-uvm_factory* get_factory()
-{
-  return uvm_factory::get();
-}
+}; // class uvm_factory
 
 } // namespace uvm
 

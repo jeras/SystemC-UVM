@@ -20,8 +20,10 @@
 #ifndef UVM_FACT_REG_H_
 #define UVM_FACT_REG_H_
 
-#include "uvmsc/factory/uvm_factory.h"
 #include "uvmsc/factory/uvm_component_registry.h"
+#include "uvmsc/factory/uvm_default_factory.h"
+#include "uvmsc/factory/uvm_factory.h"
+#include "uvmsc/factory/uvm_factory_override.h"
 #include "uvmsc/factory/uvm_object_registry.h"
 #include "uvmsc/factory/uvm_object_wrapper.h"
 

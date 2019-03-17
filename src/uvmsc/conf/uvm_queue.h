@@ -26,6 +26,8 @@
 #define UVM_QUEUE_H_
 
 #include <string>
+#include <sstream>
+#include <list>
 
 #include "uvmsc/base/uvm_object.h"
 #include "uvmsc/base/uvm_globals.h"
@@ -378,29 +380,11 @@ std::string uvm_queue<T>::convert2string() const
   std::ostringstream str;
   typename std::list<T>::const_iterator queue_it;
 
-    if( queue.size() == 0 )
-    {
-      str << "{}";
-    }
-    else
-    {
-      if(queue.size() == 1)
-      {
-        str << "{";
-        str << *(queue.begin());
-        str << "}";
-      }
-      else
-      {
-        str << "{";
-        for( queue_it = queue.begin();
-             queue_it != queue.end();
-             queue_it++ )
-          str << *queue_it;
-          str << "}";
-      }
-    }
-    return str.str();
+  for( queue_it = queue.begin();
+      queue_it != queue.end();
+      queue_it++ )
+    str << *queue_it;
+  return str.str();
 }
 
 

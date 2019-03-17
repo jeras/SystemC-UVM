@@ -103,7 +103,7 @@ class uvm_sequencer : public uvm_sequencer_param_base<REQ,RSP>,
 
   virtual const char* kind() const; // SystemC API
 
-  this_type get_if() { static uvm_sequencer<REQ, RSP> m_if; return m_if; }
+  this_type get_if() { static uvm_sequencer<REQ, RSP> m_if("m_if"); return m_if; }
 
   // data members
 

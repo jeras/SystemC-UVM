@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2015 NXP B.V.
+//   Copyright 2015-2016 NXP B.V.
 //   All Rights Reserved Worldwide
 //
 //   Licensed under the Apache License, Version 2.0 (the
@@ -20,8 +20,7 @@
 #ifndef UVM_COMPONENT_NAME_H_
 #define UVM_COMPONENT_NAME_H_
 
-#include "sysc/kernel/sc_module.h"
-#include "uvmsc/base/uvm_root.h"
+#include <systemc>
 
 //////////////
 
@@ -38,23 +37,10 @@ namespace uvm {
 class uvm_component_name
 {
 public:
-  uvm_component_name( const sc_core::sc_module_name& nm ) : m_name( nm )
-  {}
-
-  uvm_component_name( const char* nm ) : m_name( nm )
-  {
-    uvm_root::get();
-  }
-
-  sc_core::sc_module_name name()
-  {
-    return m_name;
-  }
-
-  operator const char* () const
-  {
-    return m_name;
-  }
+  uvm_component_name( const sc_core::sc_module_name& nm );
+  uvm_component_name( const char* nm );
+  sc_core::sc_module_name name();
+  operator const char* () const;
 
 private:
   sc_core::sc_module_name m_name;

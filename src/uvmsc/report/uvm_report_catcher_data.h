@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-//   Copyright 2013 NXP B.V.
+//   Copyright 2013-2016 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2009 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -41,28 +41,23 @@ class uvm_report_catcher_data
  private:
   uvm_report_catcher_data();
 
-  // not to be implemented
+  // Disabled
   uvm_report_catcher_data(uvm_report_catcher_data const&);
   void operator=(uvm_report_catcher_data const&);
 
  public:
 
   static uvm_report_catcher_data& get() {
-	  static uvm_report_catcher_data instance;
-	  return instance;
+    static uvm_report_catcher_data instance;
+    return instance;
   }
 
-  uvm_severity m_modified_severity;
-  int m_modified_verbosity;
-  std::string m_modified_id;
-  std::string m_modified_message;
-  std::string m_file_name;
-  int m_line_number;
-  uvm_report_object* m_client;
-  uvm_action m_modified_action;
+  uvm_report_message* m_modified_report_message;
+  uvm_report_message* m_orig_report_message;
+
   bool m_set_action_called;
-  uvm_report_server* m_server;
-  std::string m_name;
+
+  // Counts for the demoteds and caughts
 
   int m_demoted_fatal;
   int m_demoted_error;
@@ -71,16 +66,12 @@ class uvm_report_catcher_data
   int m_caught_error;
   int m_caught_warning;
 
+  // Flag counts
+
   const int DO_NOT_CATCH;
-  const int DO_NOT_MODIFY
-  ;
+  const int DO_NOT_MODIFY;
   int m_debug_flags;
 
-  uvm_severity m_orig_severity;
-  uvm_action   m_orig_action;
-  std::string  m_orig_id;
-  int          m_orig_verbosity;
-  std::string  m_orig_message;
 
   bool do_report;
 

@@ -23,6 +23,7 @@
 #ifndef UVM_SEQUENCER_PARAM_BASE_H_
 #define UVM_SEQUENCER_PARAM_BASE_H_
 
+#include <sstream>
 #include <tlm.h>
 
 #include <list>

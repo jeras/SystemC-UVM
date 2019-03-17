@@ -28,7 +28,7 @@
 #include "uvmsc/base/uvm_void.h"
 #include "uvmsc/base/uvm_object.h"
 #include "uvmsc/base/uvm_globals.h"
-#include "uvmsc/conf/uvm_pool.h"
+#include "uvmsc/print/uvm_printer.h"
 
 namespace uvm {
 
@@ -36,7 +36,7 @@ namespace uvm {
 //------------------------------------------------------------------------------
 // CLASS: uvm_object_string_pool<T>
 //
-//! This provides a specialization of the generic #uvm_pool<KEY,T> class for
+//! This provides a specialization of the generic #std::map<KEY,T> class for
 //! an associative array of #uvm_object-based objects indexed by string.
 //! Specializations of this class include the #uvm_event_pool (a
 //! uvm_object_string_pool storing objects of type #uvm_event) and
@@ -45,7 +45,7 @@ namespace uvm {
 //------------------------------------------------------------------------------
 
 template <typename T = uvm_object >
-class uvm_object_string_pool : public uvm_pool<std::string,T>
+class uvm_object_string_pool : public std::map<std::string,T>
 {
  public:
   uvm_object_string_pool();
@@ -78,7 +78,7 @@ class uvm_object_string_pool : public uvm_pool<std::string,T>
 /////////////////////////////////////////
 
 //-----------------------------------------------------------------------------
-// Initialization of uvm_pool static data members
+// Initialization of static data members
 //-----------------------------------------------------------------------------
 
 template <typename T>
@@ -96,14 +96,14 @@ uvm_object_string_pool<T>* uvm_object_string_pool<T>::m_global_pool = NULL;
 
 template <typename T>
 uvm_object_string_pool<T>::uvm_object_string_pool()
-  : uvm_pool<std::string,T>()
+  : std::map<std::string,T>()
 {
   this->pool.clear();
 }
 
 template <typename T>
 uvm_object_string_pool<T>::uvm_object_string_pool( const std::string& name )
-: uvm_pool<std::string,T>(name)
+: std::map<std::string,T>(name)
 {
   this->pool.clear();
 }

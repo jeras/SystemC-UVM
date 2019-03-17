@@ -22,6 +22,7 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
 #include <systemc>
 #include "sysc/kernel/sc_dynamic_processes.h"
 
@@ -29,6 +30,8 @@
 #include "uvmsc/seq/uvm_sequencer_base.h"
 #include "uvmsc/report/uvm_report_object.h"
 #include "uvmsc/base/uvm_object_globals.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 #include "uvmsc/factory/uvm_factory.h"
 
 using namespace sc_core;
@@ -576,7 +579,9 @@ uvm_sequence_item* uvm_sequence_base::create_item( uvm_object_wrapper* type_var,
                                                    uvm_sequencer_base* l_sequencer,
                                                    const std::string& name )
 {
-  uvm_factory* f_ = uvm_factory::get();
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* f_ = cs->get_factory();
+
   uvm_sequence_item* item  = dynamic_cast<uvm_sequence_item*>
     (f_->create_object_by_type( type_var, this->get_full_name(), name ));
 

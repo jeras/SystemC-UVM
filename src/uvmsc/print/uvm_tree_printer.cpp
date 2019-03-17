@@ -72,6 +72,16 @@ std::string uvm_tree_printer::emit()
 
   std::string linefeed = (newline.empty() || newline == " ") ? newline : (newline + knobs.prefix);
 
+  std::string separator_start;
+  std::string separator_end;
+
+  // make sure we access the separator characters only for a valid string length
+  if (knobs.separator.size() > 1)
+  {
+    separator_start = knobs.separator[0];
+    separator_end = knobs.separator[1];
+  }
+
   // Header
   if (knobs.header)
   {
@@ -80,10 +90,9 @@ std::string uvm_tree_printer::emit()
       s = s + user_format + linefeed;
   }
 
-  int i = 0;
-  for( m_row_vecItT it = m_rows.begin(); it < m_rows.end(); it++ )
+  for( unsigned int i = 0; i < m_rows.size(); i++ )
   {
-    uvm_printer_row_info row = (*it);
+    uvm_printer_row_info row = m_rows[i];
     user_format = format_row(row);
     if (user_format.empty())
     {
@@ -115,14 +124,11 @@ std::string uvm_tree_printer::emit()
             s = s + "(" + row.size + ") ";
       }
 
-      if ( it < m_rows.end()-1 ) //i < m_rows.size()-1)
+      if ( i < m_rows.size()-1 )
       {
-        m_row_vecItT itloc = it;
-        itloc++;
-
-        if ((*itloc).level > row.level)
+        if (m_rows[i+1].level > row.level)
         {
-          s = s + "{" + linefeed;
+          s = s + separator_start + linefeed;
           continue;
         }
       }
@@ -131,15 +137,13 @@ std::string uvm_tree_printer::emit()
       s = s + row.val + " " + linefeed;
 
       // Scope handling...
-      if (it <= m_rows.end()-1) // (i <= m_rows.size()-1)
+      if (i <= m_rows.size()-1)
       {
-        m_row_vecItT itloc = it;
-        itloc++;
         int end_level;
-        if (it == m_rows.end()-1)
+        if (i == m_rows.size()-1)
           end_level = 0;
         else
-          end_level = (*itloc).level;
+          end_level = m_rows[i+1].level;
 
         if (end_level < row.level)
         {
@@ -147,7 +151,7 @@ std::string uvm_tree_printer::emit()
           for (int l = row.level-1; l >= end_level; l--)
           {
             indent_str = space.substr(1,l * knobs.indent);
-            s = s + indent_str + "}" + linefeed;
+            s = s + indent_str + separator_end + linefeed;
           }
         }
       }
@@ -155,8 +159,6 @@ std::string uvm_tree_printer::emit()
     }
     else
       s = s + user_format;
-
-    i++;
   }
 
   // Footer

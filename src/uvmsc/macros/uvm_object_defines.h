@@ -51,7 +51,6 @@
   typedef ::uvm::uvm_object_registry<__VA_ARGS__ > type_id; \
   static type_id* get_type() { return type_id::get(); } \
 
-
 // -------------------------------------------
 // MACRO: M_UVM_GET_TYPE_NAME_FUNC
 //

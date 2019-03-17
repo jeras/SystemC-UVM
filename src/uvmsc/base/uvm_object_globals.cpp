@@ -21,6 +21,7 @@
 //----------------------------------------------------------------------
 
 #include "uvmsc/base/uvm_object_globals.h"
+#include "uvmsc/policy/uvm_comparer.h"
 
 namespace uvm {
 
@@ -102,5 +103,6 @@ const char* uvm_verbosity_name[] =
   "UVM_DEBUG"
 };
 
+uvm_comparer* uvm_default_comparer = uvm_comparer::init(); // uvm_comparer::init();
 
 } /* namespace uvm */

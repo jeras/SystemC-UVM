@@ -23,6 +23,7 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include "uvmsc/base/uvm_event_callback.h"
 #include "uvmsc/base/uvm_event.h"
 #include "uvmsc/base/uvm_globals.h"
 

@@ -1,23 +1,26 @@
 include $(top_srcdir)/config/Make-rules
 
 H_FILES = \
+	uvm_default_report_server.h \
 	uvm_report.h \
-	uvm_report_object.h \
 	uvm_report_catcher.h \
 	uvm_report_catcher_data.h \
 	uvm_report_handler.h \
-	uvm_report_server.h \
-	uvm_root_report_handler.h
+	uvm_report_message.h \
+	uvm_report_object.h \
+	uvm_report_server.h
 
 NO_H_FILES = 
 
 noinst_HEADERS = $(H_FILES)
 
 CXX_FILES = \
-	uvm_report_object.cpp \
+	uvm_default_report_server.cpp \
 	uvm_report_catcher.cpp \
 	uvm_report_catcher_data.cpp \
 	uvm_report_handler.cpp \
+	uvm_report_message.cpp \
+	uvm_report_object.cpp \
 	uvm_report_server.cpp
 
 NO_CXX_FILES =

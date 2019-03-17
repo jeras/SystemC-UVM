@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-//   Copyright 2013 NXP B.V.
+//   Copyright 2013-2017 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2009 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -36,7 +36,7 @@ class uvm_report_object;
 class uvm_report_handler;
 class uvm_report_server;
 class uvm_report_catcher;
-
+class uvm_report_message_element_container;
 
 typedef uvm_callbacks<uvm_report_object, uvm_report_catcher> uvm_report_cb;
 typedef uvm_callback_iter<uvm_report_object, uvm_report_catcher> uvm_report_cb_iter;
@@ -86,8 +86,6 @@ struct sev_id_struct
 class uvm_report_catcher : public uvm_callback
 {
  public:
-  friend class uvm_report_server;
-  friend class uvm_root;
 
   typedef enum { UNKNOWN_ACTION, THROW, CAUGHT} action_e;
 
@@ -117,6 +115,8 @@ class uvm_report_catcher : public uvm_callback
   
   int get_line() const;
   
+  uvm_report_message_element_container* get_element_container() const;
+
   //--------------------------------------------------------------------------
   // Group: Change Message State
   //--------------------------------------------------------------------------
@@ -132,6 +132,22 @@ class uvm_report_catcher : public uvm_callback
   void set_message( const std::string& message );
   
   void set_action( uvm_action action );
+
+  void set_context( const std::string& context_str );
+
+  void add_int( const std::string& name,
+                uvm_bitstream_t value,
+                int size,
+                uvm_radix_enum radix,
+                uvm_action action = (UVM_LOG|UVM_RM_RECORD) );
+
+  void add_string( const std::string& name,
+                   const std::string& value,
+                   uvm_action action = (UVM_LOG|UVM_RM_RECORD) );
+
+  void add_object( const std::string& name,
+                   uvm_object* obj,
+                   uvm_action action = (UVM_LOG|UVM_RM_RECORD) );
 
   //--------------------------------------------------------------------------
   // Group: Debug
@@ -157,30 +173,47 @@ class uvm_report_catcher : public uvm_callback
                          const std::string& message,
                          int verbosity,
                          const std::string& fname = "",
-                         int line = 0 );
+                         int line = 0,
+                         const std::string& context_name = "",
+                         bool report_enabled_checked = false );
 
   void uvm_report_error( const std::string& id,
                          const std::string& message,
                          int verbosity,
                          const std::string& fname = "",
-                         int line = 0 );
-   
+                         int line = 0,
+                         const std::string& context_name = "",
+                         bool report_enabled_checked = false );
+
   void uvm_report_warning( const std::string& id,
                            const std::string& message,
                            int verbosity,
                            const std::string& fname = "",
-                           int line = 0 );
+                           int line = 0,
+                           const std::string& context_name = "",
+                           bool report_enabled_checked = false );
    
   void uvm_report_info( const std::string& id,
                         const std::string& message,
                         int verbosity,
                         const std::string& fname = "",
-                        int line = 0 );
+                        int line = 0,
+                        const std::string& context_name = "",
+                        bool report_enabled_checked = false );
+
+  void uvm_report( uvm_severity severity,
+                   const std::string& id,
+                   const std::string& message,
+                   int verbosity,
+                   const std::string& fname="",
+                   int line = 0,
+                   const std::string& context_name = "",
+                   bool report_enabled_checked = false );
 
   void issue();
 
  public:
-  static void summarize_report_catcher( UVM_FILE file = 0 ); //TODO added default, not in SV
+  static void summarize();
 
   /////////////////////////////////////////////////////
   /////////////////////////////////////////////////////
@@ -189,43 +222,19 @@ class uvm_report_catcher : public uvm_callback
   /////////////////////////////////////////////////////
   /////////////////////////////////////////////////////
 
- private:
-
-  // Group: Current Message State
-
-  std::string get_context() const;
-
-  // Group: Debug
+  static bool process_all_report_catchers( uvm_report_message* rm );
 
   static void debug_report_catcher( int what = 0 );
 
-  // Group: Reporting
+ private:
 
-  void uvm_report( uvm_severity severity,
-                   const std::string& id,
-                   const std::string& message,
-                   int verbosity,
-                   const std::string& fname="",
-                   int line = 0);
+  std::string get_context() const;
 
   int process_report_catcher();
 
-  static int process_all_report_catchers( uvm_report_server* server, //input
-                                          uvm_report_object*& client, //input - TODO check
-                                          uvm_severity& severity, //ref
-                                          const std::string& name, //input
-                                          std::string& id, //ref
-                                          std::string& message, //ref
-                                          int& verbosity_level, //ref
-                                          uvm_action& action, //ref
-                                          const std::string& filename, //input
-                                          const int& line ); //input
-
-  // Other methods
-
-  static void f_display( UVM_FILE file, const std::string& str );
-
   UVM_REGISTER_CB(uvm_report_object,uvm_report_catcher)
+
+  void uvm_process_report_message(uvm_report_message* msg);
 
 }; // class uvm_report_catcher
 

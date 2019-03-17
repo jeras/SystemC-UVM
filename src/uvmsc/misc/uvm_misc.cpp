@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2012-2015 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   Copyright 2014 Fraunhofer-Gesellschaft zur Foerderung
 //					der angewandten Forschung e.V.
 //   Copyright 2007-2011 Mentor Graphics Corporation
@@ -31,11 +31,16 @@
 #include <string>
 #include <functional>
 #include <iomanip>
+#include <sstream>
+#include <cstdarg>
 
 #include <systemc>
 
 #include "uvmsc/base/uvm_object_globals.h"
 #include "uvmsc/base/uvm_object.h"
+#include "uvmsc/base/uvm_root.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 
 using namespace sc_core;
 
@@ -150,12 +155,12 @@ std::string uvm_vector_to_string( uvm_bitstream_t value,
     }
     case UVM_UNSIGNED: // format "%0s%0d"
     {
-      rstr << radix_str << std::dec << value; // TODO check signed sc_int to unsigned?
+      rstr << radix_str << std::dec << value.to_uint();
       return rstr.str();
     }
     case UVM_STRING:  // format "%0s%0s"
     {
-      rstr << radix_str << (char)value;
+      rstr << radix_str << (char)value.to_int();
       return rstr.str();
     }
     case UVM_TIME:    // format "%0s%0t" ??
@@ -181,7 +186,7 @@ const char* uvm_apprepend_name[] = {
 };
 
 //----------------------------------------------------------------------
-// Global function: uvm_separator
+// Global function: uvm_flatten_name
 //
 // Implementation defined
 //----------------------------------------------------------------------
@@ -258,6 +263,24 @@ std::string uvm_object_value_str( const uvm_object* v )
   str << "@" << std::setw(3) << std::setfill('0') << v->get_inst_id();
   return str.str();
 }
+
+//----------------------------------------------------------------------
+// Global function: uvm_string_queue_join
+//
+//! Concatenates strings in a vector to a single string
+//----------------------------------------------------------------------
+
+const std::string uvm_string_queue_join( const std::vector<std::string>& q )
+{
+  std::string s;
+  s.clear();
+  s = "";
+
+  for( unsigned int i = 0; i < q.size(); i++ ) s += q[i];
+
+  return s;
+}
+
 
 //----------------------------------------------------------------------
 // Global function: uvm_toupper
@@ -385,5 +408,20 @@ std::string uvm_sformatf(const char* format, ...)
   va_end(argptr);
   return std::string(s);
 }
+
+//----------------------------------------------------------------------
+// Global function: enable_hdl_access
+//
+//! Implementation defined
+//----------------------------------------------------------------------
+
+void enable_hdl_access(sc_core::sc_object* dut)
+{
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_root* top = cs->get_root();
+
+  top->m_hdl_obj = dut;
+}
+
 
 } /* namespace uvm */

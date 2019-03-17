@@ -22,18 +22,21 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------------
 
-#include "uvmsc/base/uvm_object.h"
-#include "uvmsc/base/uvm_component.h"
 #include "uvmsc/base/uvm_globals.h"
+#include "uvmsc/base/uvm_object.h"
+#include "uvmsc/base/uvm_object_globals.h"
+#include "uvmsc/base/uvm_component.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 #include "uvmsc/factory/uvm_factory.h"
 #include "uvmsc/misc/uvm_status_container.h"
 #include "uvmsc/print/uvm_printer.h"
 #include "uvmsc/print/uvm_table_printer.h"
 #include "uvmsc/print/uvm_tree_printer.h"
+#include "uvmsc/print/uvm_printer_globals.h"
 #include "uvmsc/policy/uvm_packer.h"
 #include "uvmsc/policy/uvm_recorder.h"
 #include "uvmsc/report/uvm_report_object.h"
-#include "uvmsc/print/uvm_printer_globals.h"
 
 namespace uvm {
 
@@ -64,6 +67,7 @@ uvm_packer* uvm_default_packer = uvm_object::get_uvm_packer();
 uvm_object::uvm_object()
 {
   m_leaf_name = sc_core::sc_gen_unique_name( "object" );
+  m_full_name = m_leaf_name; // initial value
   m_inst_id = g_inst_count++;
 
   // make only one status container
@@ -125,8 +129,9 @@ const std::string uvm_object::get_name() const
 //! Returns the full hierarchical name of this object.
 //----------------------------------------------------------------------------
 
-const std::string uvm_object::get_full_name() const {
-  return get_name(); // TODO this is not the full name...
+const std::string uvm_object::get_full_name() const
+{
+  return get_name();  // TODO not the full name..
 }
 
 //----------------------------------------------------------------------------
@@ -194,7 +199,10 @@ const uvm_object_wrapper* uvm_object::get_object_type() const
   if( get_type_name() == "<unknown>" )
     return NULL;
 
-  return uvm_factory::get()->find_by_name(get_type_name());
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  return factory->find_wrapper_by_name(get_type_name());
 }
 
 //----------------------------------------------------------------------------
@@ -456,7 +464,7 @@ void uvm_object::do_copy( const uvm_object& rhs )
 bool uvm_object::compare( const uvm_object& rhs,
                           const uvm_comparer* comparer ) const
 {
-  return do_compare(rhs);
+  return do_compare(rhs, (comparer==NULL)?::uvm::uvm_default_comparer:comparer);
 }
 
 
@@ -807,6 +815,7 @@ uvm_packer* uvm_object::get_uvm_packer()
   static uvm_packer* p = new uvm_packer;
   return p;
 }
+
 
 ///////////
 

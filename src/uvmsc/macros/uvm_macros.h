@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------
-//   Copyright 2012-2013 NXP B.V.
+//   Copyright 2012-2016 NXP B.V.
 //   All Rights Reserved
 //
 //   Licensed under the Apache License, Version 2.0 (the
@@ -25,7 +25,6 @@
 #include "uvmsc/macros/uvm_sequence_defines.h"
 #include "uvmsc/macros/uvm_message_defines.h"
 #include "uvmsc/macros/uvm_callback_defines.h"
-
-//#define UVM_DELAY(TIME) wait(TIME);
+#include "uvmsc/macros/uvm_string_defines.h"
 
 #endif /* UVM_MACROS_H_ */

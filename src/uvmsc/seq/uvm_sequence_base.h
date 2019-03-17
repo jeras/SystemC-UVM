@@ -49,6 +49,7 @@ class uvm_sequence_base: public uvm_sequence_item
   friend class uvm_sequencer_base;
   template <typename REQ, typename RSP> friend class uvm_sequencer;
   template <typename REQ, typename RSP> friend class uvm_sequencer_param_base;
+  friend class uvm_reg_map;
 
  public:
   explicit uvm_sequence_base( uvm_object_name name_ );

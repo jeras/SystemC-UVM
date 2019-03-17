@@ -22,6 +22,8 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
+
 #include "uvmsc/cb/uvm_callback.h"
 #include "uvmsc/macros/uvm_callback_defines.h"
 

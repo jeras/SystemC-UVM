@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-//   Copyright 2013-2014 NXP B.V.
+//   Copyright 2013-2016 NXP B.V.
 //   Copyright 2007-2010 Mentor Graphics Corporation
 //   Copyright 2007-2009 Cadence Design Systems, Inc.
 //   Copyright 2010 Synopsys, Inc.
@@ -29,8 +29,8 @@ namespace uvm {
 //------------------------------------------------------------------------------
 
 uvm_report_catcher_data::uvm_report_catcher_data()
-  : m_client(NULL),
-    m_server(NULL),
+  : m_modified_report_message(NULL),
+    m_orig_report_message(NULL),
     m_demoted_fatal(0),
     m_demoted_error(0),
     m_demoted_warning(0),

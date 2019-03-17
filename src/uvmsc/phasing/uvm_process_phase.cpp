@@ -22,6 +22,8 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
+
 #include "uvmsc/base/uvm_object_globals.h"
 #include "uvmsc/base/uvm_globals.h"
 #include "uvmsc/seq/uvm_sequencer_base.h"
@@ -194,9 +196,11 @@ void uvm_process_phase::execute( uvm_component* comp,
     // else handle does not exist and can be used
   else
   {
-    std::string procname = "exec_proc_"+phase->get_name()+"_"+uvm_flatten_name(comp->get_full_name());
+    std::string procname = "exec_proc_"+phase->get_name()+ "_" + uvm_flatten_name(comp->get_full_name());
+
     m_proc_handle[comp] =
-      sc_spawn(sc_bind(&uvm_process_phase::exec_proc, this, comp, phase), procname.c_str());
+      sc_spawn(sc_bind(&uvm_process_phase::exec_proc, this, comp, phase),
+         sc_core::sc_gen_unique_name(procname.c_str()));
 
     comp->m_set_run_handle(m_proc_handle[comp]);
 

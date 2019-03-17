@@ -29,6 +29,13 @@
 ##   Created on: 2014-11-14
 ##
 ## --------------------------------------------------------------------------
+##
+##   SVN Version       :  $Revision: 502 $
+##   SVN last checkin  :  $Date: 2014-11-14 20:42:52 +0100 (Fri, 14 Nov 2014) $
+##   SVN checkin by    :  $Author: thomasu $
+##   SVN Id            :  $Id: uvm-systemc.pc.in 502 2014-11-14 19:42:52Z thomasu $
+##
+## --------------------------------------------------------------------------
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@

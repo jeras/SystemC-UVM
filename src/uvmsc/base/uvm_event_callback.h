@@ -30,7 +30,6 @@
 
 namespace uvm {
 
-
 // forward class declarations
 class uvm_event;
 
@@ -49,49 +48,10 @@ class uvm_event;
 class uvm_event_callback : public uvm_object
 {
 public:
-
-  // Constructor
-  // Creates a new callback object.
-  uvm_event_callback( const std::string& name = "" ) : uvm_object(name)
-  {}
-
-  // Function: pre_trigger
-  //
-  // This callback is called just before triggering the associated event.
-  // In a derived class, override this method to implement any pre-trigger
-  // functionality.
-  //
-  // If your callback returns 1, then the event will not trigger and the
-  // post-trigger callback is not called. This provides a way for a callback
-  // to prevent the event from triggering.
-  //
-  // In the function, ~e~ is the <uvm_event> that is being triggered, and ~data~
-  // is the optional data associated with the event trigger.
-
-  virtual bool pre_trigger( const uvm_event* e, const uvm_object* data = NULL ) const
-  {
-    return false;
-  }
-
-  // Function: post_trigger
-  //
-  // This callback is called after triggering the associated event.
-  // In a derived class, override this method to implement any post-trigger
-  // functionality.
-  //
-  //
-  // In the function, \p e is the #uvm_event that is being triggered, and \p data
-  // is the optional data associated with the event trigger.
-
-  virtual void post_trigger( const uvm_event* e, const uvm_object* data = NULL) const
-  {
-    return;
-  }
-
-  virtual uvm_object* create( const std::string& name = "" )
-  {
-    return NULL;
-  }
+  uvm_event_callback( const std::string& name = "" );
+  virtual bool pre_trigger( const uvm_event* e, const uvm_object* data = NULL ) const;
+  virtual void post_trigger( const uvm_event* e, const uvm_object* data = NULL) const;
+  virtual uvm_object* create( const std::string& name = "" );
 
 }; // class uvm_event_callback
 

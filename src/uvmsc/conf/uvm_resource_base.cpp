@@ -23,12 +23,18 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <vector>
+
+#include "uvmsc/base/uvm_object.h"
+#include "uvmsc/base/uvm_globals.h"
 #include "uvmsc/conf/uvm_resource_base.h"
 #include "uvmsc/conf/uvm_resource_options.h"
 #include "uvmsc/conf/uvm_resource_types.h"
-#include "uvmsc/base/uvm_object.h"
-#include "uvmsc/base/uvm_globals.h"
 #include "uvmsc/print/uvm_printer.h"
+#include "uvmsc/misc/uvm_misc.h"
+#include "uvmsc/macros/uvm_message_defines.h"
+#include "uvmsc/macros/uvm_string_defines.h"
+
 
 using namespace sc_core;
 
@@ -183,8 +189,7 @@ std::string uvm_resource_base::convert2string() const
 
 void uvm_resource_base::do_print( const uvm_printer& printer ) const
 {
-  // TODO use printer?
-  std::cout << get_name() << " [" << get_scope() << "] : " << convert2string() << std::endl;
+  printer.print_string("", get_name() + " [" + get_scope() + "] : " + convert2string() );
 }
 
 
@@ -258,26 +263,29 @@ void uvm_resource_base::record_write_access( uvm_object* accessor )
 void uvm_resource_base::print_accessors() const
 {
   uvm_resource_types::access_t access_record;
+  std::vector<std::string> qs;
 
   if( access.size() == 0 )
     return;
 
-  std::cout << "  --------------" << std::endl;
-
   for(access_mapcItT it = access.begin(); it != access.end(); it++)
   {
-    std::cout << it->first;
+    std::ostringstream str;
+    str << it->first;
     access_record = it->second;
-    std::cout << " reads: "
-         << access_record.read_count
-         << " @ "
-         << access_record.read_time
-         << "  writes: "
-         << access_record.write_count
-         << " @ "
-         << access_record.write_time
-         << std::endl;
+    str << " reads: "
+        << access_record.read_count
+        << " @ "
+        << access_record.read_time
+        << "  writes: "
+        << access_record.write_count
+        << " @ "
+        << access_record.write_time
+        << "\n";
+    qs.push_back(str.str());
   }
+
+  UVM_INFO("UVM/RESOURCE/ACCESSOR", UVM_STRING_QUEUE_STREAMING_PACK(qs), UVM_NONE);
 }
 
 

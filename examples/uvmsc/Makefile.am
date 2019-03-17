@@ -25,6 +25,8 @@ include $(srcdir)/simple/phases/runtime/test.am
 include $(srcdir)/simple/phases/timeout/test.am
 include $(srcdir)/simple/producer_consumer/basic/test.am
 include $(srcdir)/simple/producer_consumer/override/test.am
+include $(srcdir)/simple/registers/models/aliasing/test.am
+include $(srcdir)/simple/registers/models/ro_wo_same_addr/test.am
 include $(srcdir)/simple/reporting/error/test.am
 include $(srcdir)/simple/reporting/info/test.am
 include $(srcdir)/simple/reporting/warning/test.am

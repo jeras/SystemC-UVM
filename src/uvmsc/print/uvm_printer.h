@@ -86,9 +86,9 @@ class uvm_printer
                            double value,
                            const char* scope_separator = "." ) const;
 
-  virtual void print_real( const std::string& name,
-                           float value,
-                           const char* scope_separator = "." ) const;
+  virtual void print_double( const std::string& name,
+                             double value,
+                             const char* scope_separator = "." ) const;
 
   virtual void print_object( const std::string& name,
                              const uvm_object& value,

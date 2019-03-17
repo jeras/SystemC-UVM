@@ -41,6 +41,7 @@ namespace uvm {
   bool is_auto_item_recording_enabled() { return imp->is_auto_item_recording_enabled(); } \
   void get_next_item( REQ& req_arg ) { imp->get_next_item(req_arg); } \
   bool try_next_item( REQ& req_arg ) { return imp->try_next_item(req_arg); } \
+  void item_done() { imp->item_done(); } \
   void item_done( const RSP& rsp_arg ) { imp->item_done(rsp_arg); } \
   void wait_for_sequences() { imp->wait_for_sequences(); } \
   bool has_do_available() { return imp->has_do_available(); } \

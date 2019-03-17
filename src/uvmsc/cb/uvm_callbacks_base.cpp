@@ -29,7 +29,7 @@ namespace uvm {
 // static data member initialization
 //------------------------------------------------------------------------------
 
-uvm_pool<uvm_object*, uvm_queue<uvm_callback*>* >* uvm_callbacks_base::m_pool = NULL;
+std::map<uvm_object*, uvm_queue<uvm_callback*>* >* uvm_callbacks_base::m_pool = NULL;
 uvm_callbacks_base* uvm_callbacks_base::m_b_inst = m_initialize();
 bool uvm_callbacks_base::m_tracing = true;
 
@@ -50,7 +50,7 @@ uvm_callbacks_base* uvm_callbacks_base::m_initialize()
   if(m_b_inst == NULL)
   {
     m_b_inst = new uvm_callbacks_base();
-    m_pool = new uvm_pool< uvm_object*, uvm_queue<uvm_callback*>* >();
+    m_pool = new std::map< uvm_object*, uvm_queue<uvm_callback*>* >();
   }
   return m_b_inst;
 }
@@ -133,13 +133,13 @@ bool uvm_callbacks_base::check_registration( uvm_object* obj, uvm_callback* cb )
 {
   uvm_callbacks_base* dt = NULL;
 
-  if (m_is_registered(obj,cb))
+  if (m_is_registered(obj, cb))
     return true;
 
     // Need to look at all possible T/CB pairs of this type
   for( unsigned int i = 0; i < m_this_type.size(); i++ )
   {
-      if(m_b_inst != m_this_type[i] && m_this_type[i]->m_is_registered(obj,cb))
+      if(m_b_inst != m_this_type[i] && m_this_type[i]->m_is_registered(obj, cb))
       return true;
   }
 

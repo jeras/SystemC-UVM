@@ -22,6 +22,7 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
 #include <systemc>
 
 #include "uvmsc/misc/uvm_scope_stack.h"

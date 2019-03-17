@@ -34,7 +34,7 @@ namespace uvm {
 
 
 // forward class declarations
-// none
+class uvm_scope_stack;
 
 //------------------------------------------------------------------------------
 // CLASS: uvm_recorder

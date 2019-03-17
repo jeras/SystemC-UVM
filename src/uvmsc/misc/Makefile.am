@@ -12,7 +12,8 @@ noinst_HEADERS = $(H_FILES)
 
 CXX_FILES = \
 	uvm_misc.cpp \
-	uvm_scope_stack.cpp
+	uvm_scope_stack.cpp \
+	uvm_status_container.cpp
 
 NO_CXX_FILES =
 

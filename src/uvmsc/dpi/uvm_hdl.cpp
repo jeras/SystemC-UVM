@@ -41,70 +41,20 @@ namespace uvm {
 
 bool uvm_hdl_check_path( const std::string& path )
 {
-  // TODO
-  return false;
-}
+  std::string objname;
+  int id1 = -1;
+  int id2 = -1;
 
+  uvm_extract_path_index(path, objname, id1, id2);
+  sc_core::sc_object* obj = sc_core::sc_find_object(objname.c_str());
 
+  if (obj == NULL)
+  {
+    uvm_report_error("HDL_CHK_PATH", "Object " + objname + " not found in design hierarchy.");
+    return false;
+  }
 
-//----------------------------------------------------------------------
-// Function: uvm_hdl_deposit
-//
-// Sets the given HDL ~path~ to the specified ~value~.
-// Returns 1 if the call succeeded, 0 otherwise.
-//----------------------------------------------------------------------
-
-bool uvm_hdl_deposit( const std::string& path, uvm_hdl_data_t value )
-{
-  // TODO
-  return false;
-}
-
-
-//----------------------------------------------------------------------
-// Function: uvm_hdl_force
-//
-// Forces the ~value~ on the given ~path~. Returns 1 if the call succeeded, 0 otherwise.
-//----------------------------------------------------------------------
-
-bool uvm_hdl_force( const std::string& path, uvm_hdl_data_t value )
-{
-  // TODO
-  return false;
-}
-
-
-
-//----------------------------------------------------------------------
-// Function: uvm_hdl_force_time
-//
-// Forces the ~value~ on the given ~path~ for the specified amount of ~force_time~.
-// If ~force_time~ is 0, <uvm_hdl_deposit> is called.
-// Returns 1 if the call succeeded, 0 otherwise.
-//----------------------------------------------------------------------
-
-void uvm_hdl_force_time( const std::string& path, uvm_hdl_data_t value, sc_core::sc_time force_time )
-{
-  // TODO
-}
-
-
-//----------------------------------------------------------------------
-// Function: uvm_hdl_release_and_read
-//
-// Releases a value previously set with <uvm_hdl_force>.
-// Returns 1 if the call succeeded, 0 otherwise. ~value~ is set to
-// the HDL value after the release. For 'reg', the value will still be
-// the forced value until it has bee procedurally reassigned. For 'wire',
-// the value will change immediately to the resolved value of its
-// continuous drivers, if any. If none, its value remains as forced until
-// the next direct assignment.
-//----------------------------------------------------------------------
-
-bool uvm_hdl_release_and_read( const std::string& path, uvm_hdl_data_t& value )
-{
-  // TODO
-  return false;
+  return true;
 }
 
 
@@ -117,21 +67,20 @@ bool uvm_hdl_release_and_read( const std::string& path, uvm_hdl_data_t& value )
 
 bool uvm_hdl_release( const std::string& path )
 {
-  // TODO
+  uvm_report_error("HDL_RELEASE", "HDL signal release not available without DPI.");
   return false;
 }
 
-
-
 //----------------------------------------------------------------------
-// Function: uvm_hdl_read()
+// Function: uvm_hdl_release_time
 //
-// Gets the value at the given ~path~.
+// Release the value on the given ~path~ after the specified amount of ~time~.
 // Returns 1 if the call succeeded, 0 otherwise.
 //----------------------------------------------------------------------
-bool uvm_hdl_read( const std::string& path, uvm_hdl_data_t& value )
+
+bool uvm_hdl_release_time( const std::string& path, sc_core::sc_time time )
 {
-  // TODO
+  uvm_report_error("HDL_RELEASE_TIME", "HDL signal release with time not available without DPI.");
   return false;
 }
 

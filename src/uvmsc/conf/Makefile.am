@@ -5,7 +5,6 @@ H_FILES = \
 	uvm_config_db.h \
 	uvm_config_db_options.h \
 	uvm_object_string_pool.h \
-	uvm_pool.h \
 	uvm_queue.h \
 	uvm_resource.h \
 	uvm_resource_base.h \

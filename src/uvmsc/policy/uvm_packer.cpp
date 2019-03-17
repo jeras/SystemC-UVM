@@ -1050,7 +1050,7 @@ void uvm_packer::pack_sc_logic( const sc_dt::sc_logic& a )
 
 void uvm_packer::unpack_sc_logic( sc_dt::sc_logic& a )
 {
-  sc_dt::sc_logic_value_t val = (*m_bits).get_bit(unpack_index);
+  sc_dt::sc_logic_value_t val = sc_dt::sc_logic_value_t((*m_bits).get_bit(unpack_index));
   a = val;
   inc_unpack_index(1);
 }
@@ -1087,7 +1087,7 @@ void uvm_packer::unpack_sc_lv_base( sc_dt::sc_lv_base& a )
   int n = a.length();
   for (int i = 0; i < n; i++)
   {
-    sc_dt::sc_logic_value_t val = (*m_bits).get_bit(unpack_index);
+    sc_dt::sc_logic_value_t val = sc_dt::sc_logic_value_t((*m_bits).get_bit(unpack_index));
     a.set_bit(i, val);
     unpack_index++;
   }
@@ -1114,8 +1114,8 @@ void uvm_packer::unpack_sc_int_base( sc_dt::sc_int_base& a )
   int n = a.length();
   for (int i = 0; i < n; i++)
   {
-    sc_dt::sc_logic_value_t val = (*m_bits).get_bit(unpack_index);
-    if (int(val) == int(sc_dt::Log_1))
+    sc_dt::sc_logic_value_t val = sc_dt::sc_logic_value_t((*m_bits).get_bit(unpack_index));
+    if (val == sc_dt::Log_1)
     {
       a.set(i, true);
     } else {
@@ -1147,8 +1147,8 @@ void uvm_packer::unpack_sc_uint_base( sc_dt::sc_uint_base& a )
   int n = a.length();
   for (int i = 0; i < n; i++)
   {
-    sc_dt::sc_logic_value_t val = (*m_bits).get_bit(unpack_index);
-    if (int(val) == int(sc_dt::Log_1))
+    sc_dt::sc_logic_value_t val = sc_dt::sc_logic_value_t((*m_bits).get_bit(unpack_index));
+    if (val == sc_dt::Log_1)
     {
       a.set(i, true);
     } else {
@@ -1178,8 +1178,8 @@ void uvm_packer::unpack_sc_signed( sc_dt::sc_signed& a )
   int n = a.length();
   for (int i = 0; i < n; i++)
   {
-    sc_dt::sc_logic_value_t val = (*m_bits).get_bit(unpack_index);
-    if (int(val) == int(sc_dt::Log_1))
+    sc_dt::sc_logic_value_t val = sc_dt::sc_logic_value_t((*m_bits).get_bit(unpack_index));
+    if (val == sc_dt::Log_1)
     {
       a.set(i, true);
     } else {
@@ -1211,8 +1211,8 @@ void uvm_packer::unpack_sc_unsigned( sc_dt::sc_unsigned& a )
   int n = a.length();
   for (int i = 0; i < n; i++)
   {
-    sc_dt::sc_logic_value_t val = (*m_bits).get_bit(unpack_index);
-    if (int(val) == int(sc_dt::Log_1))
+    sc_dt::sc_logic_value_t val = sc_dt::sc_logic_value_t((*m_bits).get_bit(unpack_index));
+    if (val == sc_dt::Log_1)
     {
       a.set(i, true);
     } else {

@@ -22,9 +22,11 @@
 //   permissions and limitations under the License.
 //----------------------------------------------------------------------
 
+#include <sstream>
+
 #include "uvmsc/base/uvm_transaction.h"
-#include "uvmsc/base/uvm_component.h"
 #include "uvmsc/print/uvm_printer.h"
+#include "uvmsc/base/uvm_component.h"
 
 using namespace sc_core;
 

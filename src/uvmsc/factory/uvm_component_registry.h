@@ -27,10 +27,16 @@
 
 #include <systemc>
 #include <string>
+#include <sstream>
 
+#include "uvmsc/base/uvm_root.h"
 #include "uvmsc/base/uvm_component.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
 #include "uvmsc/report/uvm_report_object.h"
 #include "uvmsc/factory/uvm_factory.h"
+#include "uvmsc/factory/uvm_object_wrapper.h"
+
 
 namespace uvm {
 
@@ -174,7 +180,8 @@ uvm_component_registry<T>* uvm_component_registry<T>::get()
 
   if (me == NULL)
   {
-    uvm_factory* f = uvm_factory::get();
+    uvm_coreservice_t* cs = uvm_coreservice_t::get();
+    uvm_factory* f = cs->get_factory();
     me = new uvm_component_registry<T>("comprgy_" + type_name);
     f->do_register(me);
   }
@@ -198,7 +205,9 @@ T* uvm_component_registry<T>::create( const std::string& name,
 {
   std::string l_contxt;
   uvm_component* obj = NULL;
-  uvm_factory* f = uvm_factory::get();
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* f = cs->get_factory();
+
   if (l_contxt.empty() && parent != NULL)
     l_contxt = parent->get_full_name();
   obj = f->create_component_by_type( get(), l_contxt, name, parent );
@@ -211,7 +220,8 @@ T* uvm_component_registry<T>::create( const std::string& name,
         << " A component of type '" << ((obj == NULL) ? "NULL" : obj->get_type_name() )
         << "' was returned instead. Name=" << name << " Parent="
         << ((parent == NULL) ? "NULL" : parent->get_type_name()) << " contxt=" << l_contxt;
-    get_report_object()->uvm_report_fatal("FCTTYP", msg.str(), UVM_NONE);
+
+    uvm_report_fatal("FCTTYP", msg.str(), UVM_NONE);
   }
   return robj;
 }
@@ -229,7 +239,9 @@ template <typename T>
 void uvm_component_registry<T>::set_type_override( uvm_object_wrapper* override_type,
                                                    bool replace )
 {
-  get_factory()->set_type_override_by_type(get(),override_type,replace);
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+  factory->set_type_override_by_type(get(), override_type, replace);
 }
 
 
@@ -261,7 +273,10 @@ void uvm_component_registry<T>::set_inst_override( uvm_object_wrapper* override_
     else
       loc_inst_path << parent->get_full_name() << "." << inst_path;
   }
-  get_factory()->set_inst_override_by_type( get(), override_type,loc_inst_path.str());
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+  uvm_factory* factory = cs->get_factory();
+
+  factory->set_inst_override_by_type( get(), override_type,loc_inst_path.str());
 }
 
 //----------------------------------------------------------------------

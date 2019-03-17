@@ -31,10 +31,12 @@
 
 #include "uvmsc/conf/uvm_resource.h"
 #include "uvmsc/conf/uvm_queue.h"
-#include "uvmsc/conf/uvm_pool.h"
 #include "uvmsc/conf/uvm_resource_db.h"
 #include "uvmsc/conf/uvm_config_db_options.h"
 #include "uvmsc/base/uvm_globals.h"
+#include "uvmsc/base/uvm_coreservice_t.h"
+#include "uvmsc/base/uvm_default_coreservice_t.h"
+#include "uvmsc/base/uvm_root.h"
 #include "uvmsc/phasing/uvm_phase.h"
 
 namespace uvm {
@@ -93,7 +95,7 @@ class uvm_config_db : public uvm_resource_db<T>
 {
  public:
 
-  typedef std::map< uvm_component*, uvm_pool< std::string, uvm_resource<T>* > > rsc_t;
+  typedef std::map< uvm_component*, std::map< std::string, uvm_resource<T>* > > rsc_t;
 
   uvm_config_db();
   virtual ~uvm_config_db();
@@ -194,7 +196,7 @@ typedef uvm_config_db<uvm_object_wrapper*> uvm_config_wrapper;
 //----------------------------------------------------------------------
 
 template <typename T>
-std::map< uvm_component*, uvm_pool< std::string, uvm_resource<T>* > >
+std::map< uvm_component*, std::map< std::string, uvm_resource<T>* > >
   uvm_config_db<T>::m_rsc = uvm_config_db<T>::init();
 
 template <typename T>
@@ -222,6 +224,8 @@ void uvm_config_db<T>::set( uvm_component* cntxt,
     uvm_root* top = NULL;
     uvm_phase* curr_phase = NULL;
     uvm_resource<T>* r = NULL;
+    uvm_coreservice_t* cs = NULL;
+
     bool exists = false;
     std::string loc_instname = inst_name; // local instance name, input is const
     std::string setstr = "set";
@@ -231,7 +235,9 @@ void uvm_config_db<T>::set( uvm_component* cntxt,
     //process p = process::self();
     //string rstate = p.get_randstate();
 
-    top = uvm_root::get();
+    cs = uvm_coreservice_t::get();
+    top = cs->get_root();
+
     curr_phase = top->m_current_phase;
 
     if( cntxt == NULL )
@@ -247,11 +253,11 @@ void uvm_config_db<T>::set( uvm_component* cntxt,
 
     if(r == NULL)
     {
-      uvm_pool< std::string, uvm_resource<T>* > pool;
+      std::map< std::string, uvm_resource<T>* > pool;
       std::string key = loc_instname+field_name;
       m_rsc[cntxt] = pool;
       r = new uvm_resource<T>(field_name, loc_instname);
-      pool.add(key, r);
+      pool[key] = r;
     }
     else
     {
@@ -285,7 +291,7 @@ void uvm_config_db<T>::set( uvm_component* cntxt,
       {
         w = m_waiters[field_name]->get(i);
         if( uvm_re_match( uvm_glob_to_re(inst_name), w->inst_name ) )
-          w->trigger.notify();
+          w->trigger.notify(sc_core::SC_ZERO_TIME);
       }
     }
 
@@ -317,8 +323,13 @@ bool uvm_config_db<T>::get( uvm_component* cntxt,
   uvm_resource<T>* r = NULL;
   uvm_resource_pool* rp = uvm_resource_pool::get();
   uvm_resource_types::rsrc_q_t* rq = NULL;
+  uvm_root* top = NULL;
+  uvm_coreservice_t* cs = NULL;
+
   std::string loc_instname = inst_name;  // local instance name, input is const
-  uvm_root* top = uvm_root::get();
+
+  cs = uvm_coreservice_t::get();
+  top = cs->get_root();
 
   if( cntxt == NULL )
     cntxt = top;
@@ -371,9 +382,11 @@ bool uvm_config_db<T>::exists( uvm_component* cntxt,
                                const std::string& field_name,
                                bool spell_chk )
 {
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
+
   std::string loc_inst_name = inst_name;
   if(cntxt == NULL)
-    cntxt = uvm_root::get();
+    cntxt = cs->get_root();
 
   if(inst_name.empty())
     loc_inst_name = cntxt->get_full_name();
@@ -400,14 +413,15 @@ void uvm_config_db<T>::wait_modified( uvm_component* cntxt,
   // TODO process
   //  process p = process::self();
   //  string rstate = p.get_randstate();
+  uvm_coreservice_t* cs = uvm_coreservice_t::get();
 
   m_uvm_waiter* waiter = NULL;
   std::string loc_inst_name = inst_name;
 
   if(cntxt == NULL)
-    cntxt = uvm_root::get();
+    cntxt = cs->get_root();
 
-  if(cntxt != uvm_root::get())
+  if(cntxt != cs->get_root())
   {
     if(!inst_name.empty())
       loc_inst_name = cntxt->get_full_name() + "." + inst_name;
@@ -457,7 +471,7 @@ uvm_resource<T>* uvm_config_db<T>::m_get_resource_match( uvm_component* cntxt,
                                                          const std::string& field_name,
                                                          const std::string& inst_name)
 {
-  uvm_pool< std::string, uvm_resource<T>* > pool;
+  std::map< std::string, uvm_resource<T>* > pool;
   std::string lookup;
 
   if( m_rsc.find(cntxt) == m_rsc.end() )
@@ -466,9 +480,9 @@ uvm_resource<T>* uvm_config_db<T>::m_get_resource_match( uvm_component* cntxt,
   lookup = inst_name+field_name;
   pool = m_rsc[cntxt];
 
-  if(!pool.exists(lookup)) return NULL;
+  if(pool.find(lookup) == pool.end()) return NULL;
 
-  return pool.get(lookup);
+  return (pool.find(lookup))->second;
 }
 
 } // namespace uvm
