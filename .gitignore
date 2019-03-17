@@ -28,10 +28,8 @@
 /config/missing
 /config/mkinstalldirs
 /config/test-driver
-/configure
 
 Makefile
-Makefile.in
 
 # ignore recommended build directory and variants
 /objdir*/
